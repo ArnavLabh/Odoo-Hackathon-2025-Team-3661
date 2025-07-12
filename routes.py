@@ -1,13 +1,25 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from models import User, Skill, UserSkill, SwapRequest, Feedback, db
-from werkzeug.security import generate_password_hash, check_password_hash
+import bcrypt
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
 
 main = Blueprint('main', __name__)
 
-# Helper function to check if user is logged in
+# Helper functions
+def hash_password(password):
+    """Hash a password using bcrypt"""
+    password_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+
+def check_password(password, hashed_password):
+    """Check if password matches the hashed password"""
+    password_bytes = password.encode('utf-8')
+    hashed_bytes = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
+
 def is_logged_in():
     return 'user_id' in session
 
@@ -38,7 +50,7 @@ def register():
             return redirect(url_for('main.register'))
         
         # Create new user
-        password_hash = generate_password_hash(password)
+        password_hash = hash_password(password)
         new_user = User(
             name=name,
             email=email,
@@ -64,7 +76,7 @@ def login():
         
         user = User.query.filter_by(email=email).first()
         
-        if user and check_password_hash(user.password_hash, password):
+        if user and check_password(password, user.password_hash):
             if user.is_banned:
                 flash('Your account has been banned. Please contact support.', 'error')
                 return redirect(url_for('main.login'))
@@ -127,6 +139,42 @@ def edit_profile():
         return redirect(url_for('main.profile'))
     
     return render_template('edit_profile.html', user=user)
+
+# Additional Profile Routes
+@main.route('/public_profile/<int:user_id>')
+def public_profile(user_id):
+    """View another user's public profile"""
+    user = User.query.get_or_404(user_id)
+    
+    if not user.is_public and (not is_logged_in() or get_current_user().id != user_id):
+        flash('This profile is private.', 'error')
+        return redirect(url_for('main.browse'))
+    
+    if user.is_banned:
+        flash('This user is not available.', 'error')
+        return redirect(url_for('main.browse'))
+    
+    offered_skills = UserSkill.query.filter_by(user_id=user_id, type='offered').all()
+    wanted_skills = UserSkill.query.filter_by(user_id=user_id, type='wanted').all()
+    
+    # Get user's feedback/ratings
+    user_feedback = db.session.query(Feedback).join(SwapRequest).filter(
+        (SwapRequest.from_user_id == user_id) | (SwapRequest.to_user_id == user_id)
+    ).filter(Feedback.reviewer_id != user_id).all()
+    
+    # Calculate average rating
+    ratings = [f.rating for f in user_feedback if f.rating]
+    avg_rating = sum(ratings) / len(ratings) if ratings else 0
+    
+    can_request_swap = is_logged_in() and get_current_user().id != user_id
+    
+    return render_template('public_profile.html', 
+                         user=user, 
+                         offered_skills=offered_skills, 
+                         wanted_skills=wanted_skills,
+                         can_request_swap=can_request_swap,
+                         feedback=user_feedback,
+                         avg_rating=avg_rating)
 
 # Skills Management Routes
 @main.route('/manage_skills')
@@ -197,6 +245,124 @@ def remove_skill(skill_id, skill_type):
     
     return redirect(url_for('main.manage_skills'))
 
+# Skill Swap Core Routes
+@main.route('/swap_request/<int:to_user_id>')
+def swap_request_form(to_user_id):
+    """Show swap request form"""
+    if not is_logged_in():
+        flash('Please login to make swap requests.', 'error')
+        return redirect(url_for('main.login'))
+    
+    current_user = get_current_user()
+    to_user = User.query.get_or_404(to_user_id)
+    
+    if current_user.id == to_user_id:
+        flash('You cannot request a swap with yourself.', 'error')
+        return redirect(url_for('main.browse'))
+    
+    # Get current user's offered skills and target user's offered skills
+    current_user_offered = UserSkill.query.filter_by(user_id=current_user.id, type='offered').all()
+    to_user_offered = UserSkill.query.filter_by(user_id=to_user_id, type='offered').all()
+    
+    return render_template('swap_request.html', 
+                         to_user=to_user, 
+                         current_user_offered=current_user_offered,
+                         to_user_offered=to_user_offered)
+
+@main.route('/swap_list')
+def swap_list():
+    """View all user's swap requests"""
+    if not is_logged_in():
+        flash('Please login to view your swaps.', 'error')
+        return redirect(url_for('main.login'))
+    
+    user = get_current_user()
+    
+    # Get all swap requests (sent and received)
+    sent_requests = SwapRequest.query.filter_by(from_user_id=user.id).order_by(SwapRequest.created_at.desc()).all()
+    received_requests = SwapRequest.query.filter_by(to_user_id=user.id).order_by(SwapRequest.created_at.desc()).all()
+    
+    return render_template('swap_list.html', 
+                         sent_requests=sent_requests, 
+                         received_requests=received_requests)
+
+@main.route('/feedback_form/<int:swap_id>')
+def feedback_form(swap_id):
+    """Show feedback form for a completed swap"""
+    if not is_logged_in():
+        flash('Please login to leave feedback.', 'error')
+        return redirect(url_for('main.login'))
+    
+    swap_request = SwapRequest.query.get_or_404(swap_id)
+    current_user = get_current_user()
+    
+    # Verify user is part of this swap
+    if swap_request.from_user_id != current_user.id and swap_request.to_user_id != current_user.id:
+        flash('You are not part of this swap.', 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    if swap_request.status != 'completed':
+        flash('You can only leave feedback for completed swaps.', 'error')
+        return redirect(url_for('main.swap_list'))
+    
+    # Check if user already left feedback
+    existing_feedback = Feedback.query.filter_by(
+        swap_id=swap_id,
+        reviewer_id=current_user.id
+    ).first()
+    
+    if existing_feedback:
+        flash('You have already left feedback for this swap.', 'info')
+        return redirect(url_for('main.swap_list'))
+    
+    # Determine who the other user is
+    other_user = swap_request.receiver if current_user.id == swap_request.from_user_id else swap_request.requester
+    
+    return render_template('feedback_form.html', 
+                         swap_request=swap_request, 
+                         other_user=other_user)
+
+@main.route('/submit_feedback', methods=['POST'])
+def submit_feedback():
+    """Submit feedback for a swap"""
+    if not is_logged_in():
+        return redirect(url_for('main.login'))
+    
+    swap_id = request.form.get('swap_id')
+    rating = request.form.get('rating')
+    comment = request.form.get('comment', '')
+    
+    current_user = get_current_user()
+    swap_request = SwapRequest.query.get_or_404(swap_id)
+    
+    # Verify user is part of this swap
+    if swap_request.from_user_id != current_user.id and swap_request.to_user_id != current_user.id:
+        flash('You are not part of this swap.', 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    # Check if feedback already exists
+    existing_feedback = Feedback.query.filter_by(
+        swap_id=swap_id,
+        reviewer_id=current_user.id
+    ).first()
+    
+    if existing_feedback:
+        flash('You have already left feedback for this swap.', 'info')
+        return redirect(url_for('main.swap_list'))
+    
+    feedback = Feedback(
+        swap_id=swap_id,
+        reviewer_id=current_user.id,
+        rating=int(rating),
+        comment=comment
+    )
+    
+    db.session.add(feedback)
+    db.session.commit()
+    
+    flash('Thank you for your feedback!', 'success')
+    return redirect(url_for('main.swap_list'))
+
 # Browse and Search Routes
 @main.route('/browse')
 def browse():
@@ -237,17 +403,97 @@ def view_user(user_id):
     
     return render_template('view_user.html', user=user, offered_skills=offered_skills, wanted_skills=wanted_skills, can_request_swap=can_request_swap)
 
-# Dashboard
-@main.route('/dashboard')
-def dashboard():
+@main.route('/search_results')
+def search_results():
+    """Advanced search and filter results"""
+    search_query = request.args.get('search', '')
+    skill_filter = request.args.get('skill', '')
+    location_filter = request.args.get('location', '')
+    availability_filter = request.args.get('availability', '')
+    
+    # Base query for public, non-banned users
+    query = User.query.filter_by(is_public=True, is_banned=False)
+    
+    # Apply search filters
+    if search_query:
+        query = query.filter(User.name.contains(search_query))
+    
+    if location_filter:
+        query = query.filter(User.location.contains(location_filter))
+        
+    if availability_filter:
+        query = query.filter(User.availability == availability_filter)
+    
+    if skill_filter:
+        # Find users who offer this skill
+        skill = Skill.query.filter_by(name=skill_filter).first()
+        if skill:
+            user_ids = [us.user_id for us in UserSkill.query.filter_by(skill_id=skill.id, type='offered').all()]
+            query = query.filter(User.id.in_(user_ids))
+    
+    users = query.all()
+    all_skills = Skill.query.all()
+    
+    # Get unique locations and availabilities for filter options
+    locations = db.session.query(User.location).filter(User.location.isnot(None), User.location != '').distinct().all()
+    availabilities = db.session.query(User.availability).filter(User.availability.isnot(None), User.availability != '').distinct().all()
+    
+    return render_template('search_results.html', 
+                         users=users, 
+                         skills=all_skills,
+                         locations=[l[0] for l in locations],
+                         availabilities=[a[0] for a in availabilities],
+                         search_query=search_query, 
+                         skill_filter=skill_filter,
+                         location_filter=location_filter,
+                         availability_filter=availability_filter)
+
+# Privacy and Settings
+@main.route('/privacy_toggle', methods=['GET', 'POST'])
+def privacy_toggle():
+    """Toggle user profile privacy settings"""
     if not is_logged_in():
-        flash('Please login to view your dashboard.', 'error')
+        flash('Please login to change privacy settings.', 'error')
         return redirect(url_for('main.login'))
     
     user = get_current_user()
     
-    # Get swap requests
-    sent_requests = SwapRequest.query.filter_by(from_user_id=user.id).all()
-    received_requests = SwapRequest.query.filter_by(to_user_id=user.id).all()
+    if request.method == 'POST':
+        user.is_public = 'is_public' in request.form
+        db.session.commit()
+        
+        status = "public" if user.is_public else "private"
+        flash(f'Your profile is now {status}.', 'success')
+        return redirect(url_for('main.profile'))
     
-    return render_template('dashboard.html', user=user, sent_requests=sent_requests, received_requests=received_requests)
+    return render_template('privacy_toggle.html', user=user)
+
+# Notifications (Optional)
+@main.route('/notifications')
+def notifications():
+    """View user notifications"""
+    if not is_logged_in():
+        flash('Please login to view notifications.', 'error')
+        return redirect(url_for('main.login'))
+    
+    user = get_current_user()
+    
+    # Get recent swap requests and updates
+    recent_received = SwapRequest.query.filter_by(to_user_id=user.id).order_by(SwapRequest.created_at.desc()).limit(10).all()
+    recent_sent = SwapRequest.query.filter_by(from_user_id=user.id).filter(SwapRequest.status != 'pending').order_by(SwapRequest.created_at.desc()).limit(10).all()
+    
+    # Get recent feedback
+    recent_feedback = db.session.query(Feedback).join(SwapRequest).filter(
+        ((SwapRequest.from_user_id == user.id) | (SwapRequest.to_user_id == user.id)) &
+        (Feedback.reviewer_id != user.id)
+    ).order_by(Feedback.id.desc()).limit(5).all()
+    
+    return render_template('notifications.html', 
+                         recent_received=recent_received,
+                         recent_sent=recent_sent,
+                         recent_feedback=recent_feedback)
+
+# Error handlers
+@main.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404

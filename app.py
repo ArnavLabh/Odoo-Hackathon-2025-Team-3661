@@ -19,9 +19,13 @@ def create_app():
     # Register blueprints
     from routes import main
     from swap_routes import swaps
+    from admin_routes import admin
+    from api_routes import api
     
     app.register_blueprint(main)
     app.register_blueprint(swaps, url_prefix='/swaps')
+    app.register_blueprint(admin, url_prefix='/admin')
+    app.register_blueprint(api)
 
     with app.app_context():
         db.create_all()
