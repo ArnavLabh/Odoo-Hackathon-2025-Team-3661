@@ -238,10 +238,17 @@ def manage_skills():
     
     user = get_current_user()
     all_skills = Skill.query.all()
-    user_offered = [us.skill_id for us in UserSkill.query.filter_by(user_id=user.id, type='offered').all()]
-    user_wanted = [us.skill_id for us in UserSkill.query.filter_by(user_id=user.id, type='wanted').all()]
+    offered_skills = UserSkill.query.filter_by(user_id=user.id, type='offered').all()
+    wanted_skills = UserSkill.query.filter_by(user_id=user.id, type='wanted').all()
+    user_offered = [us.skill_id for us in offered_skills]
+    user_wanted = [us.skill_id for us in wanted_skills]
     
-    return render_template('manage_skills.html', skills=all_skills, user_offered=user_offered, user_wanted=user_wanted)
+    return render_template('manage_skills.html', 
+                         skills=all_skills, 
+                         offered_skills=offered_skills,
+                         wanted_skills=wanted_skills,
+                         user_offered=user_offered, 
+                         user_wanted=user_wanted)
 
 @main.route('/add_skill', methods=['POST'])
 def add_skill():
@@ -250,6 +257,9 @@ def add_skill():
     
     skill_name = request.form.get('skill_name')
     skill_type = request.form.get('skill_type')  # 'offered' or 'wanted'
+    
+    if not skill_name or not skill_type:
+        return jsonify({'error': 'Missing skill name or type'}), 400
     
     # Create skill if it doesn't exist
     skill = Skill.query.filter_by(name=skill_name).first()
@@ -274,10 +284,10 @@ def add_skill():
         db.session.add(user_skill)
         db.session.commit()
         flash(f'Skill "{skill_name}" added to your {skill_type} skills!', 'success')
+        return jsonify({'success': True, 'message': f'Skill "{skill_name}" added successfully!'})
     else:
         flash(f'Skill "{skill_name}" is already in your {skill_type} skills.', 'info')
-    
-    return redirect(url_for('main.manage_skills'))
+        return jsonify({'error': f'Skill "{skill_name}" is already in your {skill_type} skills.'}), 400
 
 @main.route('/remove_skill/<int:skill_id>/<skill_type>')
 def remove_skill(skill_id, skill_type):

@@ -759,10 +759,10 @@
                                 </div>
                             </div>
                             <div class="skill-actions">
-                                <button class="skill-action-btn btn-edit" onclick="editSkill({{ user_skill.id }}, 'offered')">
+                                <button class="skill-action-btn btn-edit" onclick="editSkill('{{ user_skill.id }}', 'offered')">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="skill-action-btn btn-delete" onclick="deleteSkill({{ user_skill.id }})">
+                                <button class="skill-action-btn btn-delete" onclick="deleteSkill('{{ user_skill.skill.id }}', 'offered')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -816,10 +816,10 @@
                                 </div>
                             </div>
                             <div class="skill-actions">
-                                <button class="skill-action-btn btn-edit" onclick="editSkill({{ user_skill.id }}, 'wanted')">
+                                <button class="skill-action-btn btn-edit" onclick="editSkill('{{ user_skill.id }}', 'wanted')">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="skill-action-btn btn-delete" onclick="deleteSkill({{ user_skill.id }})">
+                                <button class="skill-action-btn btn-delete" onclick="deleteSkill('{{ user_skill.skill.id }}', 'wanted')">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -1012,30 +1012,48 @@
             skillName.focus();
         };
         
-        window.deleteSkill = function(skillId) {
+        window.deleteSkill = function(skillId, skillType) {
             if (confirm('Are you sure you want to delete this skill?')) {
-                const skillCard = document.querySelector(`[data-skill-id="${skillId}"]`);
-                if (skillCard) {
-                    // Add fade out animation
-                    skillCard.style.transition = 'all 0.3s ease';
-                    skillCard.style.opacity = '0';
-                    skillCard.style.transform = 'translateY(-20px)';
-                    
-                    setTimeout(() => {
-                        skillCard.remove();
-                        updateSkillCounts();
-                        
-                        // Show empty state if no skills left
-                        const grid = skillCard.closest('.skills-grid');
-                        if (grid.children.length === 0) {
-                            const section = grid.closest('.skills-section');
-                            const isOffered = section.classList.contains('offered-skills');
-                            showEmptyState(grid, isOffered);
+                // Call backend to remove skill
+                fetch(`/remove_skill/${skillId}/${skillType}`, {
+                    method: 'GET'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Find and remove the skill card
+                        const skillCard = document.querySelector(`[data-skill-id]:has(button[onclick*="${skillId}"][onclick*="${skillType}"])`);
+                        if (skillCard) {
+                            // Add fade out animation
+                            skillCard.style.transition = 'all 0.3s ease';
+                            skillCard.style.opacity = '0';
+                            skillCard.style.transform = 'translateY(-20px)';
+                            
+                            setTimeout(() => {
+                                skillCard.remove();
+                                updateSkillCounts();
+                                
+                                // Show empty state if no skills left
+                                const grid = skillCard.closest('.skills-grid');
+                                if (grid.children.length === 0) {
+                                    const section = grid.closest('.skills-section');
+                                    const isOffered = section.classList.contains('offered-skills');
+                                    showEmptyState(grid, isOffered);
+                                }
+                                
+                                window.SkillSwap.showNotification('Skill deleted successfully!', 'success');
+                            }, 300);
+                        } else {
+                            // If card not found, just reload the page
+                            window.location.reload();
                         }
-                        
-                        window.SkillSwap.showNotification('Skill deleted successfully!', 'success');
-                    }, 300);
-                }
+                    } else {
+                        window.SkillSwap.showNotification('Error deleting skill', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    window.SkillSwap.showNotification('Error deleting skill', 'error');
+                });
             }
         };
         
@@ -1117,21 +1135,35 @@
             submitBtn.innerHTML = '<span class="loading"></span> Saving...';
             submitBtn.disabled = true;
             
-            // Simulate API call
-            setTimeout(() => {
-                if (currentSkillId) {
-                    updateSkillCard(currentSkillId, formData);
-                    window.SkillSwap.showNotification('Skill updated successfully!', 'success');
+            // Submit to backend
+            const form = new FormData();
+            form.append('skill_name', formData.name);
+            form.append('skill_type', formData.type);
+            
+            fetch('/add_skill', {
+                method: 'POST',
+                body: form
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.SkillSwap.showNotification(data.message, 'success');
+                    // Reload the page to show updated skills
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
-                    addSkillCard(formData);
-                    window.SkillSwap.showNotification('Skill added successfully!', 'success');
+                    window.SkillSwap.showNotification(data.error || 'Error adding skill', 'error');
                 }
-                
-                closeSkillModal();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.SkillSwap.showNotification('Error adding skill', 'error');
+            })
+            .finally(() => {
                 submitBtn.innerHTML = originalHTML;
                 submitBtn.disabled = false;
-                updateSkillCounts();
-            }, 1000);
+            });
         });
         
         function addSkillCard(skillData) {
