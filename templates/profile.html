@@ -8,7 +8,7 @@
         padding: 2rem 0;
         min-height: 80vh;
     }
-    
+
     .profile-header {
         background: var(--bg-glass);
         backdrop-filter: blur(20px);
@@ -19,7 +19,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .profile-header::before {
         content: '';
         position: absolute;
@@ -29,13 +29,13 @@
         height: 4px;
         background: var(--gradient-primary);
     }
-    
+
     .profile-avatar {
         position: relative;
         text-align: center;
         margin-bottom: 2rem;
     }
-    
+
     .avatar-image {
         width: 120px;
         height: 120px;
@@ -47,12 +47,12 @@
         box-shadow: var(--shadow-light);
         transition: all 0.3s ease;
     }
-    
+
     .avatar-image:hover {
         transform: scale(1.05);
         box-shadow: var(--shadow-heavy);
     }
-    
+
     .avatar-placeholder {
         width: 120px;
         height: 120px;
@@ -68,23 +68,23 @@
         box-shadow: var(--shadow-light);
         transition: all 0.3s ease;
     }
-    
+
     .avatar-placeholder:hover {
         transform: scale(1.05);
         box-shadow: var(--shadow-heavy);
     }
-    
+
     .profile-info {
         text-align: center;
     }
-    
+
     .profile-name {
         font-size: 2rem;
         font-weight: 700;
         color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
-    
+
     .profile-meta {
         display: flex;
         justify-content: center;
@@ -92,19 +92,19 @@
         margin-bottom: 1rem;
         flex-wrap: wrap;
     }
-    
+
     .meta-item {
         display: flex;
         align-items: center;
         color: var(--text-secondary);
         font-size: 0.9rem;
     }
-    
+
     .meta-item i {
         color: var(--primary-color);
         margin-right: 0.5rem;
     }
-    
+
     .profile-stats {
         display: flex;
         justify-content: center;
@@ -112,7 +112,7 @@
         margin-top: 1.5rem;
         flex-wrap: wrap;
     }
-    
+
     .stat-item {
         text-align: center;
         padding: 1rem;
@@ -123,25 +123,25 @@
         min-width: 100px;
         transition: all 0.3s ease;
     }
-    
+
     .stat-item:hover {
         transform: translateY(-3px);
         box-shadow: var(--shadow-light);
     }
-    
+
     .stat-number {
         font-size: 1.5rem;
         font-weight: 700;
         color: var(--primary-color);
         display: block;
     }
-    
+
     .stat-label {
         font-size: 0.8rem;
         color: var(--text-secondary);
         margin-top: 0.25rem;
     }
-    
+
     .section-card {
         background: var(--bg-glass);
         backdrop-filter: blur(20px);
@@ -151,12 +151,12 @@
         margin-bottom: 2rem;
         transition: all 0.3s ease;
     }
-    
+
     .section-card:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-heavy);
     }
-    
+
     .section-title {
         font-size: 1.5rem;
         font-weight: 700;
@@ -165,19 +165,19 @@
         display: flex;
         align-items: center;
     }
-    
+
     .section-title i {
         color: var(--primary-color);
         margin-right: 0.75rem;
         font-size: 1.3rem;
     }
-    
+
     .skills-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 1rem;
     }
-    
+
     .skill-item {
         background: var(--bg-glass);
         backdrop-filter: blur(20px);
@@ -189,7 +189,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .skill-item::before {
         content: '';
         position: absolute;
@@ -201,46 +201,46 @@
         opacity: 0.1;
         transition: left 0.3s ease;
     }
-    
+
     .skill-item:hover::before {
         left: 0;
     }
-    
+
     .skill-item:hover {
         transform: translateY(-3px);
         box-shadow: var(--shadow-light);
     }
-    
+
     .skill-name {
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
-    
+
     .skill-description {
         font-size: 0.85rem;
         color: var(--text-secondary);
         line-height: 1.4;
     }
-    
+
     .empty-state {
         text-align: center;
         padding: 3rem 2rem;
         color: var(--text-secondary);
     }
-    
+
     .empty-state i {
         font-size: 3rem;
         color: var(--primary-color);
         margin-bottom: 1rem;
         opacity: 0.5;
     }
-    
+
     .empty-state h3 {
         color: var(--text-primary);
         margin-bottom: 0.5rem;
     }
-    
+
     .action-buttons {
         display: flex;
         justify-content: center;
@@ -248,7 +248,7 @@
         margin-top: 2rem;
         flex-wrap: wrap;
     }
-    
+
     .btn-action {
         padding: 0.75rem 1.5rem;
         border: none;
@@ -261,7 +261,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .btn-action::before {
         content: '';
         position: absolute;
@@ -272,46 +272,46 @@
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
         transition: left 0.5s ease;
     }
-    
+
     .btn-action:hover::before {
         left: 100%;
     }
-    
+
     .btn-primary-action {
         background: var(--gradient-primary);
         color: white;
     }
-    
+
     .btn-primary-action:hover {
         transform: translateY(-2px);
         box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
         color: white;
     }
-    
+
     .btn-secondary-action {
         background: var(--bg-glass);
         backdrop-filter: blur(20px);
         border: 1px solid var(--border-color);
         color: var(--text-primary);
     }
-    
+
     .btn-secondary-action:hover {
         background: var(--bg-secondary);
         transform: translateY(-2px);
         box-shadow: var(--shadow-light);
         color: var(--text-primary);
     }
-    
+
     .btn-action i {
         margin-right: 0.5rem;
     }
-    
+
     .profile-actions {
         position: sticky;
         top: 100px;
         z-index: 100;
     }
-    
+
     .privacy-badge {
         display: inline-flex;
         align-items: center;
@@ -321,29 +321,29 @@
         font-weight: 600;
         margin-top: 1rem;
     }
-    
+
     .privacy-public {
         background: rgba(16, 185, 129, 0.1);
         color: var(--accent-color);
         border: 1px solid var(--accent-color);
     }
-    
+
     .privacy-private {
         background: rgba(239, 68, 68, 0.1);
         color: #ef4444;
         border: 1px solid #ef4444;
     }
-    
+
     .privacy-badge i {
         margin-right: 0.5rem;
     }
-    
+
     .activity-feed {
         max-height: 400px;
         overflow-y: auto;
         padding-right: 0.5rem;
     }
-    
+
     .activity-item {
         display: flex;
         align-items: center;
@@ -351,15 +351,15 @@
         border-bottom: 1px solid var(--border-color);
         transition: background 0.3s ease;
     }
-    
+
     .activity-item:hover {
         background: var(--bg-secondary);
     }
-    
+
     .activity-item:last-child {
         border-bottom: none;
     }
-    
+
     .activity-icon {
         width: 40px;
         height: 40px;
@@ -372,80 +372,80 @@
         margin-right: 1rem;
         font-size: 0.9rem;
     }
-    
+
     .activity-content {
         flex: 1;
     }
-    
+
     .activity-text {
         color: var(--text-primary);
         font-size: 0.9rem;
         margin-bottom: 0.25rem;
     }
-    
+
     .activity-time {
         color: var(--text-secondary);
         font-size: 0.8rem;
     }
-    
+
     @media (max-width: 768px) {
         .profile-header {
             padding: 1.5rem;
         }
-        
+
         .profile-meta {
             flex-direction: column;
             gap: 0.5rem;
         }
-        
+
         .profile-stats {
             gap: 1rem;
         }
-        
+
         .stat-item {
             min-width: 80px;
             padding: 0.75rem;
         }
-        
+
         .section-card {
             padding: 1.5rem;
         }
-        
+
         .skills-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .action-buttons {
             flex-direction: column;
             align-items: center;
         }
-        
+
         .btn-action {
             width: 100%;
             max-width: 300px;
             justify-content: center;
         }
-        
+
         .profile-actions {
             position: static;
         }
     }
-    
+
     /* Custom Scrollbar for Activity Feed */
     .activity-feed::-webkit-scrollbar {
         width: 6px;
     }
-    
+
     .activity-feed::-webkit-scrollbar-track {
         background: var(--bg-secondary);
         border-radius: 3px;
     }
-    
+
     .activity-feed::-webkit-scrollbar-thumb {
         background: var(--primary-color);
         border-radius: 3px;
     }
-    
+
     .activity-feed::-webkit-scrollbar-thumb:hover {
         background: var(--secondary-color);
     }
@@ -462,19 +462,18 @@
                 <div class="profile-header fade-in">
                     <div class="profile-avatar">
                         {% if user.photo_url %}
-                        <img src="{{ url_for('static', filename=user.photo_url) }}" 
-                             alt="{{ user.name }}" 
-                             class="avatar-image">
+                        <img src="{{ url_for('static', filename=user.photo_url) }}" alt="{{ user.name }}"
+                            class="avatar-image">
                         {% else %}
                         <div class="avatar-placeholder">
                             {{ user.name[0].upper() }}
                         </div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="profile-info">
                         <h1 class="profile-name">{{ user.name }}</h1>
-                        
+
                         <div class="profile-meta">
                             {% if user.location %}
                             <div class="meta-item">
@@ -482,26 +481,26 @@
                                 {{ user.location }}
                             </div>
                             {% endif %}
-                            
+
                             {% if user.availability %}
                             <div class="meta-item">
                                 <i class="fas fa-clock"></i>
                                 {{ user.availability.title() }} availability
                             </div>
                             {% endif %}
-                            
+
                             <div class="meta-item">
                                 <i class="fas fa-calendar-alt"></i>
                                 Joined {{ user.created_at.strftime('%B %Y') }}
                             </div>
                         </div>
-                        
+
                         <!-- Privacy Badge -->
                         <div class="privacy-badge {{ 'privacy-public' if user.is_public else 'privacy-private' }}">
                             <i class="fas fa-{{ 'globe' if user.is_public else 'lock' }}"></i>
                             {{ 'Public Profile' if user.is_public else 'Private Profile' }}
                         </div>
-                        
+
                         <!-- Profile Stats -->
                         <div class="profile-stats">
                             <div class="stat-item">
@@ -523,14 +522,14 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Skills Offered Section -->
                 <div class="section-card fade-in">
                     <h2 class="section-title">
                         <i class="fas fa-gift"></i>
                         Skills I Offer
                     </h2>
-                    
+
                     {% if offered_skills %}
                     <div class="skills-grid">
                         {% for user_skill in offered_skills %}
@@ -556,14 +555,14 @@
                     </div>
                     {% endif %}
                 </div>
-                
+
                 <!-- Skills Wanted Section -->
                 <div class="section-card fade-in">
                     <h2 class="section-title">
                         <i class="fas fa-search"></i>
                         Skills I Want to Learn
                     </h2>
-                    
+
                     {% if wanted_skills %}
                     <div class="skills-grid">
                         {% for user_skill in wanted_skills %}
@@ -590,7 +589,7 @@
                     {% endif %}
                 </div>
             </div>
-            
+
             <!-- Sidebar -->
             <div class="col-lg-4">
                 <!-- Action Buttons -->
@@ -607,7 +606,7 @@
                             </a>
                         </div>
                     </div>
-                    
+
                     <!-- Quick Actions -->
                     <div class="section-card fade-in">
                         <h3 class="section-title">
@@ -625,7 +624,7 @@
                             </a>
                         </div>
                     </div>
-                    
+
                     <!-- Recent Activity -->
                     <div class="section-card fade-in">
                         <h3 class="section-title">
@@ -642,26 +641,28 @@
                                     <div class="activity-time">{{ user.created_at.strftime('%B %d, %Y') }}</div>
                                 </div>
                             </div>
-                            
+
                             {% if offered_skills %}
                             <div class="activity-item">
                                 <div class="activity-icon">
                                     <i class="fas fa-gift"></i>
                                 </div>
                                 <div class="activity-content">
-                                    <div class="activity-text">Added {{ offered_skills|length }} skill{{ 's' if offered_skills|length != 1 else '' }} to offer</div>
+                                    <div class="activity-text">Added {{ offered_skills|length }} skill{{ 's' if
+                                        offered_skills|length != 1 else '' }} to offer</div>
                                     <div class="activity-time">Recently</div>
                                 </div>
                             </div>
                             {% endif %}
-                            
+
                             {% if wanted_skills %}
                             <div class="activity-item">
                                 <div class="activity-icon">
                                     <i class="fas fa-search"></i>
                                 </div>
                                 <div class="activity-content">
-                                    <div class="activity-text">Added {{ wanted_skills|length }} learning goal{{ 's' if wanted_skills|length != 1 else '' }}</div>
+                                    <div class="activity-text">Added {{ wanted_skills|length }} learning goal{{ 's' if
+                                        wanted_skills|length != 1 else '' }}</div>
                                     <div class="activity-time">Recently</div>
                                 </div>
                             </div>
@@ -677,10 +678,10 @@
 
 {% block additional_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Add smooth animations for stats
         const statNumbers = document.querySelectorAll('.stat-number');
-        
+
         // Animate numbers when they come into view
         const statsObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -689,7 +690,7 @@
                     const finalValue = parseInt(target.textContent);
                     let currentValue = 0;
                     const increment = finalValue / 30;
-                    
+
                     const counter = setInterval(() => {
                         currentValue += increment;
                         if (currentValue >= finalValue) {
@@ -699,30 +700,30 @@
                             target.textContent = Math.floor(currentValue);
                         }
                     }, 50);
-                    
+
                     statsObserver.unobserve(target);
                 }
             });
         }, { threshold: 0.5 });
-        
+
         statNumbers.forEach(stat => {
             if (!isNaN(parseInt(stat.textContent))) {
                 statsObserver.observe(stat);
             }
         });
-        
+
         // Add hover effects to skill items
         const skillItems = document.querySelectorAll('.skill-item');
         skillItems.forEach(item => {
-            item.addEventListener('mouseenter', function() {
+            item.addEventListener('mouseenter', function () {
                 this.style.transform = 'translateY(-5px) scale(1.02)';
             });
-            
-            item.addEventListener('mouseleave', function() {
+
+            item.addEventListener('mouseleave', function () {
                 this.style.transform = 'translateY(0) scale(1)';
             });
         });
-        
+
         // Smooth scroll for internal links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -736,17 +737,17 @@
                 }
             });
         });
-        
+
         // Add loading states to action buttons
         const actionButtons = document.querySelectorAll('.btn-action');
         actionButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
+            button.addEventListener('click', function (e) {
                 if (!this.href || this.href.includes('#')) return;
-                
+
                 const originalHTML = this.innerHTML;
                 this.innerHTML = '<span class="loading"></span> Loading...';
                 this.style.pointerEvents = 'none';
-                
+
                 // Reset after 3 seconds (in case navigation fails)
                 setTimeout(() => {
                     this.innerHTML = originalHTML;
@@ -754,66 +755,68 @@
                 }, 3000);
             });
         });
-        
+
         // Add keyboard navigation
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             // Alt + E for edit profile
             if (e.altKey && e.key === 'e') {
                 e.preventDefault();
                 window.location.href = "{{ url_for('main.edit_profile') }}";
             }
-            
+
             // Alt + S for manage skills
             if (e.altKey && e.key === 's') {
                 e.preventDefault();
                 window.location.href = "{{ url_for('main.manage_skills') }}";
             }
-            
+
             // Alt + D for dashboard
             if (e.altKey && e.key === 'd') {
                 e.preventDefault();
                 window.location.href = "{{ url_for('main.dashboard') }}";
             }
         });
-        
+
         // Add tooltip for keyboard shortcuts
         const editButton = document.querySelector('a[href*="edit_profile"]');
         if (editButton) {
             editButton.title = 'Edit Profile (Alt + E)';
         }
-        
+
         const skillsButton = document.querySelector('a[href*="manage_skills"]');
         if (skillsButton) {
             skillsButton.title = 'Manage Skills (Alt + S)';
         }
-        
+
         const dashboardButton = document.querySelector('a[href*="dashboard"]');
         if (dashboardButton) {
             dashboardButton.title = 'Dashboard (Alt + D)';
         }
-        
+
         // Profile sharing functionality
         if (navigator.share) {
             const shareButton = document.createElement('button');
             shareButton.className = 'btn-secondary-action btn-action';
             shareButton.innerHTML = '<i class="fas fa-share-alt"></i> Share Profile';
-            
+
             shareButton.addEventListener('click', async () => {
                 try {
                     await navigator.share({
-                        title: `${{{ user.name|tojson }}} - Skill Swap Profile`,
+                        title: `${{ user.name | tojson }} - Skill Swap Profile`,
                         text: 'Check out this profile on Skill Swap!',
                         url: window.location.href
                     });
-                } catch (err) {
-                    console.log('Error sharing:', err);
-                }
-            });
-            
-            const actionButtons = document.querySelector('.action-buttons');
-            if (actionButtons) {
-                actionButtons.appendChild(shareButton);
-            }
+
+              
+        } catch (err) {
+            console.log('Error sharing:', err);
+        }
+    });
+
+    const actionButtons = document.querySelector('.action-buttons');
+    if (actionButtons) {
+        actionButtons.appendChild(shareButton);
+    }
         }
     });
 </script>
