@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+
+{% block title %}Request Skill Swap - Skill Swap{% endblock %}
+
+{% block additional_css %}
+<style>
+    .swap-request-container {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+    
+    .swap-request-header {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .swap-request-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+    
+    .swap-request-title {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+    
+    .swap-request-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 0;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    @media (max-width: 992px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .section-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-heavy);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+        margin-right: 0.75rem;
+    }
+    
+    .user-preview {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+        margin-right: 1.5rem;
+    }
+    
+    .user-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-right: 1.5rem;
+    }
+    
+    .user-info h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .user-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .meta-item i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+    }
+    
+    .skills-section {
+        margin-bottom: 2rem;
+    }
+    
+    .skills-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .skills-title i {
+        color: var(--accent-color);
+        margin-right: 0.75rem;
+    }
+    
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .skill-card {
+        background: var(--bg-secondary);
+        border-radius: 15px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+    }
+    
+    .skill-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-light);
+    }
+    
+    .skill-card.selected {
+        border: 2px solid var(--primary-color);
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), var(--bg-secondary));
+    }
+    
+    .skill-card h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .skill-type {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .skill-offered {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-color);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .skill-wanted {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+    
+    .swap-form {
+        margin-top: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-hint {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+    
+    .swap-diagram {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background: var(--bg-secondary);
+        border-radius: 15px;
+    }
+    
+    .swap-user {
+        text-align: center;
+        width: 40%;
+    }
+    
+    .swap-user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-color);
+        margin: 0 auto 0.5rem;
+    }
+    
+    .swap-user-placeholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 auto 0.5rem;
+    }
+    
+    .swap-user-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .swap-skill {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .swap-arrows {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 20%;
+    }
+    
+    .swap-arrow {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin: 0.5rem 0;
+    }
+    
+    .swap-arrow-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+    
+    .swap-summary {
+        background: var(--bg-secondary);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .summary-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .summary-item:last-child {
+        border-bottom: none;
+    }
+    
+    .summary-label {
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+    
+    .summary-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="swap-request-container">
+    <div class="container">
+        <div class="swap-request-header">
+            <h1 class="swap-request-title">Request a Skill Swap</h1>
+            <p class="swap-request-subtitle">Exchange skills with {{ user.name }} and learn from each other</p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="left-column">
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Swap Partner
+                    </h2>
+                    
+                    <div class="user-preview">
+                        {% if user.photo_url %}
+                        <img src="{{ user.photo_url }}" alt="{{ user.name }}" class="user-avatar">
+                        {% else %}
+                        <div class="user-avatar-placeholder">
+                            {{ user.name[0] | upper }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="user-info">
+                            <h3>{{ user.name }}</h3>
+                            <div class="user-meta">
+                                {% if user.location %}
+                                <div class="meta-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ user.location }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                {% if user.availability %}
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>{{ user.availability }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="meta-item">
+                                    <i class="fas fa-star"></i>
+                                    <span>{{ "%.1f"|format(user.get_average_rating()) }} Rating</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="skills-section">
+                        <h3 class="skills-title">
+                            <i class="fas fa-lightbulb"></i>
+                            Skills {{ user.name }} Can Teach You
+                        </h3>
+                        
+                        <div class="skills-grid">
+                            {% for skill in user.get_offered_skills() %}
+                            <div class="skill-card" data-skill-id="{{ skill.id }}" data-skill-name="{{ skill.name }}" data-skill-type="wanted">
+                                <h4>{{ skill.name }}</h4>
+                                <span class="skill-type skill-offered">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Offering
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="skills-section">
+                        <h3 class="skills-title">
+                            <i class="fas fa-graduation-cap"></i>
+                            Skills {{ user.name }} Wants to Learn
+                        </h3>
+                        
+                        <div class="skills-grid">
+                            {% for skill in user.get_wanted_skills() %}
+                            <div class="skill-card" data-skill-id="{{ skill.id }}" data-skill-name="{{ skill.name }}" data-skill-type="offered">
+                                <h4>{{ skill.name }}</h4>
+                                <span class="skill-type skill-wanted">
+                                    <i class="fas fa-graduation-cap me-1"></i>
+                                    Learning
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-column">
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-handshake"></i>
+                        Create Swap Request
+                    </h2>
+                    
+                    <div class="swap-diagram">
+                        <div class="swap-user">
+                            {% if current_user.photo_url %}
+                            <img src="{{ current_user.photo_url }}" alt="{{ current_user.name }}" class="swap-user-avatar">
+                            {% else %}
+                            <div class="swap-user-placeholder">
+                                {{ current_user.name[0] | upper }}
+                            </div>
+                            {% endif %}
+                            <div class="swap-user-name">You</div>
+                            <div class="swap-skill" id="your-skill">Select a skill to offer</div>
+                        </div>
+                        
+                        <div class="swap-arrows">
+                            <div class="swap-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="swap-arrow-label">Teach</div>
+                            <div class="swap-arrow">
+                                <i class="fas fa-arrow-left"></i>
+                            </div>
+                            <div class="swap-arrow-label">Learn</div>
+                        </div>
+                        
+                        <div class="swap-user">
+                            {% if user.photo_url %}
+                            <img src="{{ user.photo_url }}" alt="{{ user.name }}" class="swap-user-avatar">
+                            {% else %}
+                            <div class="swap-user-placeholder">
+                                {{ user.name[0] | upper }}
+                            </div>
+                            {% endif %}
+                            <div class="swap-user-name">{{ user.name }}</div>
+                            <div class="swap-skill" id="their-skill">Select a skill to learn</div>
+                        </div>
+                    </div>
+                    
+                    <form action="{{ url_for('main.create_swap_request', user_id=user.id) }}" method="post" class="swap-form" id="swap-form">
+                        <input type="hidden" name="offered_skill_id" id="offered_skill_id">
+                        <input type="hidden" name="wanted_skill_id" id="wanted_skill_id">
+                        
+                        <div class="form-group">
+                            <label for="message" class="form-label">Message to {{ user.name }}</label>
+                            <textarea name="message" id="message" class="form-control" rows="4" placeholder="Introduce yourself and explain why you'd like to swap skills with {{ user.name }}"></textarea>
+                            <p class="form-hint">Be specific about what you hope to learn and what you can offer in return</p>
+                        </div>
+                        
+                        <div class="swap-summary">
+                            <h4 class="summary-title">Swap Summary</h4>
+                            
+                            <div class="summary-item">
+                                <div class="summary-label">You'll teach:</div>
+                                <div class="summary-value" id="summary-offered">Not selected</div>
+                            </div>
+                            
+                            <div class="summary-item">
+                                <div class="summary-label">You'll learn:</div>
+                                <div class="summary-value" id="summary-wanted">Not selected</div>
+                            </div>
+                            
+                            <div class="summary-item">
+                                <div class="summary-label">Swap Partner:</div>
+                                <div class="summary-value">{{ user.name }}</div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mt-4" id="submit-btn" disabled>
+                            <i class="fas fa-paper-plane me-2"></i>
+                            Send Swap Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const skillCards = document.querySelectorAll('.skill-card');
+        const offeredSkillIdInput = document.getElementById('offered_skill_id');
+        const wantedSkillIdInput = document.getElementById('wanted_skill_id');
+        const yourSkillDisplay = document.getElementById('your-skill');
+        const theirSkillDisplay = document.getElementById('their-skill');
+        const summaryOffered = document.getElementById('summary-offered');
+        const summaryWanted = document.getElementById('summary-wanted');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        let selectedOfferedSkill = null;
+        let selectedWantedSkill = null;
+        
+        // Handle skill card selection
+        skillCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const skillId = this.getAttribute('data-skill-id');
+                const skillName = this.getAttribute('data-skill-name');
+                const skillType = this.getAttribute('data-skill-type');
+                
+                // Deselect previous cards of the same type
+                document.querySelectorAll(`.skill-card[data-skill-type="${skillType}"].selected`).forEach(selected => {
+                    selected.classList.remove('selected');
+                });
+                
+                // Select this card
+                this.classList.add('selected');
+                
+                // Update the form and display
+                if (skillType === 'offered') {
+                    selectedOfferedSkill = { id: skillId, name: skillName };
+                    offeredSkillIdInput.value = skillId;
+                    yourSkillDisplay.textContent = skillName;
+                    summaryOffered.textContent = skillName;
+                } else {
+                    selectedWantedSkill = { id: skillId, name: skillName };
+                    wantedSkillIdInput.value = skillId;
+                    theirSkillDisplay.textContent = skillName;
+                    summaryWanted.textContent = skillName;
+                }
+                
+                // Enable submit button if both skills are selected
+                if (selectedOfferedSkill && selectedWantedSkill) {
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+        
+        // Form validation
+        const swapForm = document.getElementById('swap-form');
+        swapForm.addEventListener('submit', function(e) {
+            if (!selectedOfferedSkill || !selectedWantedSkill) {
+                e.preventDefault();
+                alert('Please select both skills for the swap');
+                return false;
+            }
+            
+            return true;
+        });
+    });
+</script>
+{% endblock %}

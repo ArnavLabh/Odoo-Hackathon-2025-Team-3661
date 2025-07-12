@@ -55,8 +55,7 @@
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 2rem;
-        position: sticky;
-        top: 100px;
+        position: relative;
         z-index: 100;
     }
     
@@ -866,7 +865,7 @@
                                 <div class="stat-label">Swaps</div>
                             </div>
                             <div class="stat-item">
-                                <span class="stat-number">{{ offered_skills|length }}</span>
+                                <span class="stat-number">{{ user.get_offered_skills()|length }}</span>
                                 <div class="stat-label">Skills</div>
                             </div>
                         </div>
@@ -903,7 +902,7 @@
             <div class="pagination" id="pagination">
                 <!-- Previous button -->
                 {% if current_page > 1 %}
-                    <a href="{{ url_for('main.browse', page=current_page-1, search=search_query, skill=skill_filter) }}" class="page-btn">
+                    <a href="{{ url_for('main.browse', page=current_page-1, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 {% else %}
@@ -914,18 +913,21 @@
                 
                 <!-- First page -->
                 {% if current_page > 3 %}
-                    <a href="{{ url_for('main.browse', page=1, search=search_query, skill=skill_filter) }}" class="page-btn">1</a>
+                    <a href="{{ url_for('main.browse', page=1, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">1</a>
                     {% if current_page > 4 %}
                         <span class="page-btn" style="border: none; background: transparent;">...</span>
                     {% endif %}
                 {% endif %}
                 
                 <!-- Page numbers -->
-                {% for page_num in range(max(1, current_page-2), min(total_pages+1, current_page+3)) %}
+                {% set start_page = current_page - 2 if current_page > 2 else 1 %}
+                {% set end_page = current_page + 2 if current_page + 2 <= total_pages else total_pages %}
+                
+                {% for page_num in range(start_page, end_page + 1) %}
                     {% if page_num == current_page %}
                         <span class="page-btn active">{{ page_num }}</span>
                     {% else %}
-                        <a href="{{ url_for('main.browse', page=page_num, search=search_query, skill=skill_filter) }}" class="page-btn">{{ page_num }}</a>
+                        <a href="{{ url_for('main.browse', page=page_num, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">{{ page_num }}</a>
                     {% endif %}
                 {% endfor %}
                 
@@ -934,12 +936,12 @@
                     {% if current_page < total_pages - 3 %}
                         <span class="page-btn" style="border: none; background: transparent;">...</span>
                     {% endif %}
-                    <a href="{{ url_for('main.browse', page=total_pages, search=search_query, skill=skill_filter) }}" class="page-btn">{{ total_pages }}</a>
+                    <a href="{{ url_for('main.browse', page=total_pages, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">{{ total_pages }}</a>
                 {% endif %}
                 
                 <!-- Next button -->
                 {% if current_page < total_pages %}
-                    <a href="{{ url_for('main.browse', page=current_page+1, search=search_query, skill=skill_filter) }}" class="page-btn">
+                    <a href="{{ url_for('main.browse', page=current_page+1, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">
                         <i class="fas fa-chevron-right"></i>
                     </a>
                 {% else %}

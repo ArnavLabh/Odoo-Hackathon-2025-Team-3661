@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}Leave Feedback - Skill Swap{% endblock %}
+
+{% block additional_css %}
+<style>
+    .feedback-container {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+    
+    .feedback-header {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feedback-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+    
+    .feedback-title {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+    
+    .feedback-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 0;
+    }
+    
+    .section-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-heavy);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+        margin-right: 0.75rem;
+    }
+    
+    .swap-summary {
+        background: var(--bg-secondary);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .swap-users {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+    
+    .swap-user {
+        text-align: center;
+        width: 40%;
+    }
+    
+    .swap-user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-color);
+        margin: 0 auto 0.5rem;
+    }
+    
+    .swap-user-placeholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 auto 0.5rem;
+    }
+    
+    .swap-user-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .swap-skill {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .swap-arrows {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 20%;
+    }
+    
+    .swap-arrow {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin: 0.5rem 0;
+    }
+    
+    .swap-arrow-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+    
+    .swap-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .swap-detail {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .swap-detail-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .swap-detail-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .rating-section {
+        margin-bottom: 2rem;
+    }
+    
+    .rating-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+    
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .star-rating input {
+        display: none;
+    }
+    
+    .star-rating label {
+        font-size: 2.5rem;
+        color: #e0e0e0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #f59e0b;
+    }
+    
+    .rating-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .rating-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-hint {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+    
+    .character-counter {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-align: right;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feedback-container">
+    <div class="container">
+        <div class="feedback-header">
+            <h1 class="feedback-title">Leave Feedback</h1>
+            <p class="feedback-subtitle">Share your experience about your skill swap with {{ swap.receiver.name if swap.from_user_id == current_user.id else swap.requester.name }}</p>
+        </div>
+        
+        <div class="section-card">
+            <h2 class="section-title">
+                <i class="fas fa-handshake"></i>
+                Swap Details
+            </h2>
+            
+            <div class="swap-summary">
+                <div class="swap-users">
+                    <div class="swap-user">
+                        {% if swap.requester.photo_url %}
+                        <img src="{{ swap.requester.photo_url }}" alt="{{ swap.requester.name }}" class="swap-user-avatar">
+                        {% else %}
+                        <div class="swap-user-placeholder">
+                            {{ swap.requester.name[0] | upper }}
+                        </div>
+                        {% endif %}
+                        <div class="swap-user-name">{{ swap.requester.name }}</div>
+                        <div class="swap-skill">{{ swap.offered_skill.name }}</div>
+                    </div>
+                    
+                    <div class="swap-arrows">
+                        <div class="swap-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="swap-arrow-label">Teach</div>
+                        <div class="swap-arrow">
+                            <i class="fas fa-arrow-left"></i>
+                        </div>
+                        <div class="swap-arrow-label">Learn</div>
+                    </div>
+                    
+                    <div class="swap-user">
+                        {% if swap.receiver.photo_url %}
+                        <img src="{{ swap.receiver.photo_url }}" alt="{{ swap.receiver.name }}" class="swap-user-avatar">
+                        {% else %}
+                        <div class="swap-user-placeholder">
+                            {{ swap.receiver.name[0] | upper }}
+                        </div>
+                        {% endif %}
+                        <div class="swap-user-name">{{ swap.receiver.name }}</div>
+                        <div class="swap-skill">{{ swap.wanted_skill.name }}</div>
+                    </div>
+                </div>
+                
+                <div class="swap-details">
+                    <div class="swap-detail">
+                        <div class="swap-detail-label">Status</div>
+                        <div class="swap-detail-value">
+                            <span class="badge bg-success">Completed</span>
+                        </div>
+                    </div>
+                    
+                    <div class="swap-detail">
+                        <div class="swap-detail-label">Date Completed</div>
+                        <div class="swap-detail-value">{{ swap.completed_at.strftime('%b %d, %Y') if swap.completed_at else 'N/A' }}</div>
+                    </div>
+                    
+                    <div class="swap-detail">
+                        <div class="swap-detail-label">Swap ID</div>
+                        <div class="swap-detail-value">#{{ swap.id }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <form action="{{ url_for('main.submit_feedback', swap_id=swap.id) }}" method="post" id="feedback-form">
+                <input type="hidden" name="swap_id" value="{{ swap.id }}">
+                <input type="hidden" name="reviewer_id" value="{{ current_user.id }}">
+                
+                <div class="rating-section">
+                    <h3 class="rating-title">How would you rate your experience?</h3>
+                    
+                    <div class="star-rating">
+                        <input type="radio" name="rating" id="star5" value="5" required>
+                        <label for="star5" title="5 stars - Excellent"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" name="rating" id="star4" value="4">
+                        <label for="star4" title="4 stars - Very Good"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" name="rating" id="star3" value="3">
+                        <label for="star3" title="3 stars - Good"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" name="rating" id="star2" value="2">
+                        <label for="star2" title="2 stars - Fair"><i class="fas fa-star"></i></label>
+                        
+                        <input type="radio" name="rating" id="star1" value="1">
+                        <label for="star1" title="1 star - Poor"><i class="fas fa-star"></i></label>
+                    </div>
+                    
+                    <div class="rating-labels">
+                        <span class="rating-label">Poor</span>
+                        <span class="rating-label">Excellent</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="comment" class="form-label">Share your experience</label>
+                    <textarea name="comment" id="comment" class="form-control" rows="5" placeholder="Tell others about your experience with this skill swap..." maxlength="500"></textarea>
+                    <div class="character-counter"><span id="char-count">0</span>/500 characters</div>
+                    <p class="form-hint">Your feedback helps others in the community make informed decisions</p>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="public-feedback" name="public_feedback" checked>
+                        <label class="form-check-label" for="public-feedback">
+                            Make this feedback public on {{ swap.receiver.name if swap.from_user_id == current_user.id else swap.requester.name }}'s profile
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </a>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Submit Feedback
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Character counter for comment textarea
+        const commentTextarea = document.getElementById('comment');
+        const charCount = document.getElementById('char-count');
+        
+        commentTextarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCount.textContent = currentLength;
+            
+            if (currentLength >= 450) {
+                charCount.style.color = '#ef4444';
+            } else {
+                charCount.style.color = 'var(--text-secondary)';
+            }
+        });
+        
+        // Form validation
+        const feedbackForm = document.getElementById('feedback-form');
+        feedbackForm.addEventListener('submit', function(e) {
+            const rating = document.querySelector('input[name="rating"]:checked');
+            
+            if (!rating) {
+                e.preventDefault();
+                alert('Please select a rating');
+                return false;
+            }
+            
+            return true;
+        });
+    });
+</script>
+{% endblock %}
