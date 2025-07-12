@@ -552,21 +552,12 @@ def forgot_password():
             
             db.session.commit()
             
-            # Send reset email (in production, use proper email service)
-            try:
-                send_reset_email(user.email, reset_token)
-                flash('Password reset instructions have been sent to your email.', 'success')
-            except Exception as e:
-                flash('Error sending email. Please try again later.', 'error')
-                # Clear the token if email fails
-                user.reset_token = None
-                user.reset_token_expires = None
-                db.session.commit()
+            # Since we don't have email system, directly redirect to reset password
+            flash('Please reset your password below.', 'info')
+            return redirect(url_for('main.reset_password', token=reset_token))
         else:
-            # Don't reveal if email exists or not for security
-            flash('If an account with that email exists, password reset instructions have been sent.', 'info')
-        
-        return redirect(url_for('main.login'))
+            flash('No account found with that email address.', 'error')
+            return render_template('forgotpassword.html')
     
     return render_template('forgotpassword.html')
 
@@ -582,13 +573,17 @@ def reset_password(token):
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         
+        if not password or not confirm_password:
+            flash('Please fill in both password fields.', 'error')
+            return render_template('reset_password.html', token=token, user=user)
+        
         if password != confirm_password:
             flash('Passwords do not match.', 'error')
-            return render_template('reset_password.html', token=token)
+            return render_template('reset_password.html', token=token, user=user)
         
         if len(password) < 6:
             flash('Password must be at least 6 characters long.', 'error')
-            return render_template('reset_password.html', token=token)
+            return render_template('reset_password.html', token=token, user=user)
         
         # Update password
         user.password_hash = hash_password(password)
@@ -597,17 +592,10 @@ def reset_password(token):
         
         db.session.commit()
         
-        flash('Your password has been reset successfully. You can now login with your new password.', 'success')
+        flash(f'Password reset successful for {user.name}! You can now login with your new password.', 'success')
         return redirect(url_for('main.login'))
     
-    return render_template('reset_password.html', token=token)
-
-def send_reset_email(email, token):
-    """Send password reset email (simplified version)"""
-    # In production, use a proper email service like SendGrid, Mailgun, etc.
-    # For now, we'll just print the reset link to console
-    reset_url = f"http://127.0.0.1:5000/reset_password/{token}"
-    print(f"Password reset link for {email}: {reset_url}")
+    return render_template('reset_password.html', token=token, user=user)
     
     # TODO: Implement actual email sending
     # Example with SMTP (requires email server configuration):

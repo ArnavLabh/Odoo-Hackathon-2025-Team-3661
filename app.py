@@ -32,7 +32,25 @@ def create_app():
     # Initialize OAuth
     init_oauth(app)
 
+    # Only create tables if not in production or if DATABASE_URL is SQLite
     with app.app_context():
-        db.create_all()
+        try:
+            # Check if we're using SQLite (local development)
+            if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI'].lower():
+                db.create_all()
+            else:
+                # For production databases, we assume tables exist
+                # You should run migrations separately
+                pass
+        except Exception as e:
+            # Log the error but don't crash the app
+            app.logger.error(f"Database initialization error: {e}")
 
     return app
+
+# Create the app instance for Vercel
+app = create_app()
+
+# For local development
+if __name__ == "__main__":
+    app.run(debug=True)
