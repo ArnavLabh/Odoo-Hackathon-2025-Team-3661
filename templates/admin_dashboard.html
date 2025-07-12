@@ -1,0 +1,354 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Admin Dashboard - Skill Swap{% endblock %}
+{% block page_title %}Platform Overview{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.total_users }}</h3>
+            <p class="text-muted mb-0">Total Users</p>
+            <small class="text-success">
+                <i class="fas fa-arrow-up"></i> {{ stats.new_users_week }} this week
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-success">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.active_users }}</h3>
+            <p class="text-muted mb-0">Active Users</p>
+            <small class="text-muted">
+                {{ stats.public_profiles }} public profiles
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-warning">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.total_swaps }}</h3>
+            <p class="text-muted mb-0">Total Swaps</p>
+            <small class="text-success">
+                <i class="fas fa-arrow-up"></i> {{ stats.new_swaps_week }} this week
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-info">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.total_skills }}</h3>
+            <p class="text-muted mb-0">Total Skills</p>
+            <small class="text-muted">
+                Active categories
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Swap Status Overview -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.pending_swaps }}</h3>
+            <p class="text-muted mb-0">Pending Swaps</p>
+            <a href="{{ url_for('admin.swap_moderation', status='pending') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye me-1"></i>Review
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.completed_swaps }}</h3>
+            <p class="text-muted mb-0">Completed Swaps</p>
+            <small class="text-success">
+                Success rate: {{ "%.1f"|format((stats.completed_swaps / stats.total_swaps * 100) if stats.total_swaps > 0 else 0) }}%
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-danger">
+                <i class="fas fa-user-slash"></i>
+            </div>
+            <h3 class="mb-1">{{ stats.banned_users }}</h3>
+            <p class="text-muted mb-0">Banned Users</p>
+            <a href="{{ url_for('admin.user_list', status='banned') }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-list me-1"></i>View
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="stat-icon stat-info">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('admin.download_user_report') }}">
+                            <i class="fas fa-download me-2"></i>User Report
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('admin.download_swap_report') }}">
+                            <i class="fas fa-chart-line me-2"></i>Swap Report
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+            <h3 class="mb-1">Analytics</h3>
+            <p class="text-muted mb-0">Platform Reports</p>
+            <small class="text-info">
+                <i class="fas fa-info-circle"></i> Export available
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Top Skills -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="data-table">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-star me-2 text-warning"></i>
+                    Top Skills
+                </h5>
+                <a href="{{ url_for('admin.skill_moderation') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-cogs me-1"></i>Manage All
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Skill Name</th>
+                            <th>Usage Count</th>
+                            <th>Popularity</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for skill_name, usage_count in stats.top_skills %}
+                        {% set max_usage = stats.top_skills[0][1] if stats.top_skills and stats.top_skills[0][1] else 0 %}
+                        {% set width_percent = ((usage_count / max_usage * 100) | round(2)) if max_usage > 0 else 0 %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">#{{ loop.index }}</span>
+                            </td>
+                            <td>
+                                <i class="fas fa-tag me-2 text-muted"></i>
+                                {{ skill_name }}
+                            </td>
+                            <td>
+                                <strong>{{ usage_count }}</strong> users
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar" style="width: {{ width_percent|float }}%;"></div>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="action-btn btn-outline-info" onclick="viewSkillDetails('{{ skill_name }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="data-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-info"></i>
+                    Platform Health
+                </h5>
+            </div>
+            <div class="p-3">
+                <canvas id="healthChart" width="300" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('admin.create_notification') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-bullhorn me-2"></i>
+                            Create Announcement
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('admin.user_list') }}" class="btn btn-info w-100">
+                            <i class="fas fa-users me-2"></i>
+                            Manage Users
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('admin.swap_moderation') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Moderate Swaps
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('admin.skill_descriptions') }}" class="btn btn-success w-100">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Review Descriptions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2 text-success"></i>
+                    System Status
+                </h5>
+                <span class="badge bg-success">
+                    <i class="fas fa-check-circle me-1"></i>All Systems Operational
+                </span>
+            </div>
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="status-indicator bg-success rounded-circle me-3" style="width: 12px; height: 12px;"></div>
+                            <span>Database Connection</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="status-indicator bg-success rounded-circle me-3" style="width: 12px; height: 12px;"></div>
+                            <span>Email Service</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="status-indicator bg-success rounded-circle me-3" style="width: 12px; height: 12px;"></div>
+                            <span>OAuth Integration</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <small class="text-muted">Server Uptime</small>
+                        <div class="fw-bold">99.9%</div>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Response Time</small>
+                        <div class="fw-bold">~150ms</div>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Active Sessions</small>
+                        <div class="fw-bold">{{ stats.active_users }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Last Updated</small>
+                        <div class="fw-bold">{{ moment().format('HH:mm') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    // Platform Health Chart
+    const ctx = document.getElementById('healthChart').getContext('2d');
+    const healthChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active Users', 'Banned Users', 'Pending Approval'],
+            datasets: [{
+                data: {{ [stats.active_users, stats.banned_users, 0]|tojson }},
+                backgroundColor: [
+                    '#27ae60',
+                    '#e74c3c',
+                    '#f39c12'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+    
+    // Skill details function
+    function viewSkillDetails(skillName) {
+        alert(`Viewing details for skill: ${skillName}\n\nThis would show detailed analytics for the skill.`);
+    }
+    
+    // Real-time updates
+    function updateStats() {
+        // This would fetch real-time data
+        console.log('Updating dashboard stats...');
+    }
+    
+    // Update every 30 seconds
+    setInterval(updateStats, 30000);
+</script>
+{% endblock %}

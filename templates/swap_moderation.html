@@ -1,0 +1,540 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Swap Moderation - Admin Dashboard{% endblock %}
+{% block page_title %}Swap Moderation{% endblock %}
+
+{% block content %}
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="GET" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Status Filter</label>
+            <select class="form-select" name="status">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Swaps</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Date Range</label>
+            <select class="form-select" name="date_range">
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Sort By</label>
+            <select class="form-select" name="sort">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="priority">Priority</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-1"></i>Apply Filter
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-1">{{ swaps.total if status_filter == 'pending' else 'N/A' }}</h3>
+            <p class="text-muted mb-0">Pending Review</p>
+            <a href="?status=pending" class="btn btn-sm btn-outline-warning">View All</a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="mb-1">{{ swaps.total if status_filter == 'completed' else 'N/A' }}</h3>
+            <p class="text-muted mb-0">Completed</p>
+            <a href="?status=completed" class="btn btn-sm btn-outline-success">View All</a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-danger">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <h3 class="mb-1">{{ swaps.total if status_filter == 'rejected' else 'N/A' }}</h3>
+            <p class="text-muted mb-0">Rejected/Cancelled</p>
+            <a href="?status=rejected" class="btn btn-sm btn-outline-danger">View All</a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-info">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3 class="mb-1">{{ swaps.total }}</h3>
+            <p class="text-muted mb-0">Total Swaps</p>
+            <a href="{{ url_for('admin.download_swap_report') }}" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-download me-1"></i>Export
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Swaps Table -->
+<div class="data-table">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h5 class="mb-0">
+            <i class="fas fa-exchange-alt me-2"></i>
+            Swap Requests ({{ swaps.total }} total)
+        </h5>
+        
+        <div class="btn-group">
+            <button class="btn btn-outline-success" onclick="exportSwaps()">
+                <i class="fas fa-download me-1"></i>Export Data
+            </button>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-cog me-1"></i>Bulk Actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('complete')">
+                        <i class="fas fa-check me-2"></i>Mark as Completed
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('cancel')">
+                        <i class="fas fa-times me-2"></i>Cancel Selected
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('priority')">
+                        <i class="fas fa-star me-2"></i>Mark as Priority
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th width="50">
+                        <input type="checkbox" id="selectAll" onchange="toggleAllSwaps()">
+                    </th>
+                    <th>Swap Details</th>
+                    <th>Participants</th>
+                    <th>Skills Exchange</th>
+                    <th>Status</th>
+                    <th>Timeline</th>
+                    <th>Feedback</th>
+                    <th width="200">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for swap in swaps.items %}
+                <tr class="swap-row" data-swap-id="{{ swap.id }}">
+                    <td>
+                        <input type="checkbox" class="swap-checkbox" value="{{ swap.id }}">
+                    </td>
+                    <td>
+                        <div class="swap-details">
+                            <strong>Swap #{{ swap.id }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                Created: {{ swap.created_at.strftime('%Y-%m-%d %H:%M') if swap.created_at else 'N/A' }}
+                            </small>
+                            {% if swap.status == 'pending' %}
+                                <div class="mt-1">
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>Needs Review
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="participants">
+                            <!-- Requester -->
+                            <div class="participant mb-2">
+                                <div class="d-flex align-items-center">
+                                    {% if swap.requester.photo_url %}
+                                        <img src="{{ swap.requester.photo_url }}" alt="{{ swap.requester.name }}" 
+                                             class="rounded-circle me-2" width="30" height="30">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 30px; height: 30px; color: white; font-size: 12px;">
+                                            {{ swap.requester.name[0].upper() }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ swap.requester.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">Requester</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Arrow -->
+                            <div class="text-center mb-2">
+                                <i class="fas fa-arrow-down text-muted"></i>
+                            </div>
+                            
+                            <!-- Receiver -->
+                            <div class="participant">
+                                <div class="d-flex align-items-center">
+                                    {% if swap.receiver.photo_url %}
+                                        <img src="{{ swap.receiver.photo_url }}" alt="{{ swap.receiver.name }}" 
+                                             class="rounded-circle me-2" width="30" height="30">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 30px; height: 30px; color: white; font-size: 12px;">
+                                            {{ swap.receiver.name[0].upper() }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ swap.receiver.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">Receiver</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="skills-exchange">
+                            {% if swap.offered_skill %}
+                                <div class="skill-offered mb-2">
+                                    <i class="fas fa-arrow-up text-success me-1"></i>
+                                    <strong>Offering:</strong><br>
+                                    <span class="badge bg-success">{{ swap.offered_skill.name }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            {% if swap.wanted_skill %}
+                                <div class="skill-wanted">
+                                    <i class="fas fa-arrow-down text-info me-1"></i>
+                                    <strong>Wanting:</strong><br>
+                                    <span class="badge bg-info">{{ swap.wanted_skill.name }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            {% if not swap.offered_skill and not swap.wanted_skill %}
+                                <small class="text-muted">Skills not specified</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if swap.status == 'pending' %}
+                            <span class="status-badge status-pending">
+                                <i class="fas fa-clock me-1"></i>Pending
+                            </span>
+                        {% elif swap.status == 'accepted' %}
+                            <span class="status-badge bg-primary text-white">
+                                <i class="fas fa-handshake me-1"></i>Accepted
+                            </span>
+                        {% elif swap.status == 'completed' %}
+                            <span class="status-badge status-completed">
+                                <i class="fas fa-check-circle me-1"></i>Completed
+                            </span>
+                        {% elif swap.status == 'rejected' %}
+                            <span class="status-badge bg-danger text-white">
+                                <i class="fas fa-times-circle me-1"></i>Rejected
+                            </span>
+                        {% elif swap.status == 'cancelled' %}
+                            <span class="status-badge bg-secondary text-white">
+                                <i class="fas fa-ban me-1"></i>Cancelled
+                            </span>
+                        {% endif %}
+                        
+                        {% if swap.status == 'pending' %}
+                            <div class="mt-1">
+                                {% set days_pending = (moment().date() - swap.created_at.date()).days if swap.created_at else 0 %}
+                                <small class="text-{% if days_pending > 7 %}danger{% elif days_pending > 3 %}warning{% else %}muted{% endif %}">
+                                    {{ days_pending }} days old
+                                </small>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="timeline-info">
+                            <small>
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ swap.created_at.strftime('%m/%d/%Y') if swap.created_at else 'N/A' }}
+                            </small>
+                            
+                            {% if swap.status == 'completed' %}
+                                <div class="mt-1">
+                                    <small class="text-success">
+                                        <i class="fas fa-check me-1"></i>
+                                        Completed
+                                    </small>
+                                </div>
+                            {% endif %}
+                            
+                            {% set duration = (moment().date() - swap.created_at.date()).days if swap.created_at else 0 %}
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    Duration: {{ duration }} days
+                                </small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="feedback-summary">
+                            {% if swap.feedback %}
+                                <div class="mb-1">
+                                    <i class="fas fa-comments text-primary me-1"></i>
+                                    <strong>{{ swap.feedback|length }}</strong> feedback(s)
+                                </div>
+                                
+                                {% set avg_rating = swap.feedback|map(attribute='rating')|select|average %}
+                                {% if avg_rating %}
+                                    <div class="rating-display">
+                                        {% for i in range(5) %}
+                                            <i class="fas fa-star {% if i < avg_rating %}text-warning{% else %}text-light{% endif %}"></i>
+                                        {% endfor %}
+                                        <small class="ms-1">{{ "%.1f"|format(avg_rating) }}</small>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <small class="text-muted">
+                                    <i class="fas fa-comment-slash me-1"></i>
+                                    No feedback yet
+                                </small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <!-- View Details -->
+                            <button class="action-btn btn-outline-info" title="View Details"
+                                    onclick="viewSwapDetails({{ swap.id }})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            
+                            {% if swap.status == 'pending' %}
+                                <!-- Force Complete -->
+                                <a href="{{ url_for('admin.force_complete_swap', swap_id=swap.id) }}" 
+                                   class="action-btn btn-outline-success" title="Mark as Completed"
+                                   onclick="return confirm('Mark this swap as completed?')">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                
+                                <!-- Cancel Swap -->
+                                <a href="{{ url_for('admin.cancel_swap_admin', swap_id=swap.id) }}" 
+                                   class="action-btn btn-outline-danger" title="Cancel Swap"
+                                   onclick="return confirm('Cancel this swap?')">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            {% endif %}
+                            
+                            <!-- Contact Users -->
+                            <button class="action-btn btn-outline-primary" title="Contact Participants"
+                                    onclick="contactParticipants({{ swap.id }})">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            
+                            <!-- Priority Flag -->
+                            <button class="action-btn btn-outline-warning" title="Mark as Priority"
+                                    onclick="togglePriority({{ swap.id }})">
+                                <i class="fas fa-flag"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if swaps.pages > 1 %}
+    <div class="p-3 border-top">
+        <nav aria-label="Swaps pagination">
+            <ul class="pagination justify-content-center mb-0">
+                {% if swaps.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.swap_moderation', page=swaps.prev_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in swaps.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != swaps.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.swap_moderation', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if swaps.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.swap_moderation', page=swaps.next_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Swap Details Modal -->
+<div class="modal fade" id="swapDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    Swap Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="swapDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    function toggleAllSwaps() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.swap-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+    }
+    
+    function viewSwapDetails(swapId) {
+        const modal = new bootstrap.Modal(document.getElementById('swapDetailsModal'));
+        const content = document.getElementById('swapDetailsContent');
+        
+        // Show loading
+        content.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading swap details...</p>
+            </div>
+        `;
+        
+        modal.show();
+        
+        // Simulate loading details (replace with actual API call)
+        setTimeout(() => {
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Swap Information</h6>
+                        <p><strong>ID:</strong> ${swapId}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-warning">Pending</span></p>
+                        <p><strong>Created:</strong> 2024-01-15 14:30</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Participants</h6>
+                        <p><strong>Requester:</strong> John Doe</p>
+                        <p><strong>Receiver:</strong> Jane Smith</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Skills Exchange</h6>
+                        <p><strong>Offered:</strong> <span class="badge bg-success">Python Programming</span></p>
+                        <p><strong>Wanted:</strong> <span class="badge bg-info">Web Design</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Communication</h6>
+                        <p>No messages exchanged yet.</p>
+                    </div>
+                </div>
+            `;
+        }, 1000);
+    }
+    
+    function contactParticipants(swapId) {
+        alert(`Contact feature for swap ${swapId} would be implemented here.\n\nThis would open an email compose dialog or messaging system.`);
+    }
+    
+    function togglePriority(swapId) {
+        if (confirm('Mark this swap as priority?')) {
+            // Implement priority toggle
+            console.log(`Toggle priority for swap ${swapId}`);
+            
+            // Visual feedback
+            const row = document.querySelector(`[data-swap-id="${swapId}"]`);
+            row.style.background = '#fff3cd';
+            
+            setTimeout(() => {
+                row.style.background = '';
+                alert('Swap marked as priority!');
+            }, 500);
+        }
+    }
+    
+    function bulkAction(action) {
+        const selected = Array.from(document.querySelectorAll('.swap-checkbox:checked')).map(cb => cb.value);
+        
+        if (selected.length === 0) {
+            alert('Please select at least one swap.');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to ${action} ${selected.length} swaps?`)) {
+            console.log(`Bulk ${action} for swaps:`, selected);
+            alert(`Bulk ${action} would be implemented here for ${selected.length} swaps.`);
+        }
+    }
+    
+    function exportSwaps() {
+        window.location.href = '{{ url_for("admin.download_swap_report") }}';
+    }
+    
+    // Auto-refresh for pending swaps
+    {% if status_filter == 'pending' %}
+    setTimeout(() => {
+        location.reload();
+    }, 60000); // Refresh every minute for pending swaps
+    {% endif %}
+</script>
+{% endblock %}

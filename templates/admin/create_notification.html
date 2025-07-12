@@ -1,0 +1,497 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Create Notification - Admin Dashboard{% endblock %}
+{% block page_title %}Create Platform Notification{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Notification Form -->
+        <div class="data-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus me-2"></i>
+                    New Notification
+                </h5>
+            </div>
+            
+            <form method="POST" class="p-4">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-heading me-1"></i>
+                                Notification Title
+                            </label>
+                            <input type="text" class="form-control" name="title" required
+                                   placeholder="Enter a clear, concise title..."
+                                   maxlength="200" id="notificationTitle" />
+                            <div class="form-text">Keep it short and informative (max 200 characters)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-1"></i>
+                                Notification Type
+                            </label>
+                            <select class="form-select" name="notification_type" id="notificationType" onchange="updatePreview()">
+                                <option value="general">General Announcement</option>
+                                <option value="maintenance">Maintenance Alert</option>
+                                <option value="security">Security Notice</option>
+                                <option value="feature">New Feature</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-align-left me-1"></i>
+                        Message Content
+                    </label>
+                    <textarea class="form-control" name="message" rows="6" required
+                              placeholder="Write your notification message here..." 
+                              maxlength="1000" id="notificationMessage" onkeyup="updatePreview()"></textarea>
+                    <div class="form-text">
+                        <span id="charCount">0</span>/1000 characters
+                        <span class="float-end">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Use clear, friendly language. Avoid technical jargon.
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-users me-1"></i>
+                                Target Audience
+                            </label>
+                            <select class="form-select" name="target_audience" id="targetAudience" onchange="updateReachEstimate()">
+                                <option value="all">All Users</option>
+                                <option value="active">Active Users Only</option>
+                                <option value="admins">Administrators Only</option>
+                            </select>
+                            <div class="form-text" id="reachEstimate">
+                                Estimated reach: <strong>All registered users</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-times me-1"></i>
+                                Expires At (Optional)
+                            </label>
+                            <input type="datetime-local" class="form-control" name="expires_at" id="expiresAt" />
+                            <div class="form-text">Leave empty for permanent notification</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Options -->
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#advancedOptions">
+                        <i class="fas fa-cog me-1"></i>
+                        Advanced Options
+                    </button>
+                </div>
+                
+                <div class="collapse" id="advancedOptions">
+                    <div class="card card-body bg-light">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Priority Level</label>
+                                    <select class="form-select" name="priority">
+                                        <option value="normal">Normal</option>
+                                        <option value="high">High Priority</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Delivery Method</label>
+                                    <select class="form-select" name="delivery_method">
+                                        <option value="platform">Platform Only</option>
+                                        <option value="email">Platform + Email</option>
+                                        <option value="push">Platform + Push (Future)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="sticky" id="stickyNotification" />
+                            <label class="form-check-label" for="stickyNotification">
+                                Make this notification sticky (always visible until dismissed)
+                            </label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="track_reads" id="trackReads" checked />
+                            <label class="form-check-label" for="trackReads">
+                                Track read receipts for analytics
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a href="{{ url_for('admin.notifications') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Notifications
+                        </a>
+                    </div>
+                    
+                    <div>
+                        <button type="button" class="btn btn-outline-info me-2" onclick="saveAsDraft()">
+                            <i class="fas fa-save me-1"></i>
+                            Save as Draft
+                        </button>
+                        <button type="button" class="btn btn-outline-warning me-2" onclick="sendTestNotification()">
+                            <i class="fas fa-paper-plane me-1"></i>
+                            Send Test
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-bullhorn me-1"></i>
+                            Create & Publish
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Live Preview -->
+        <div class="data-table sticky-top">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-eye me-2"></i>
+                    Live Preview
+                </h5>
+            </div>
+            
+            <div class="p-3">
+                <!-- Preview Card -->
+                <div class="notification-preview border rounded p-3 mb-3" id="previewCard" style="background: #f8f9fa;">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon me-3" id="previewIcon">
+                            <i class="fas fa-bell text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div class="notification-content flex-grow-1">
+                            <h6 class="mb-1" id="previewTitle">Notification Title</h6>
+                            <p class="mb-2" id="previewMessage">Your notification message will appear here as you type...</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                <span id="previewTimestamp">Just now</span>
+                            </small>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Stats -->
+                <div class="preview-stats">
+                    <h6>Delivery Information</h6>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Target Audience:</small>
+                        <div class="fw-bold" id="previewAudience">All Users</div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Estimated Reach:</small>
+                        <div class="fw-bold text-primary" id="previewReach">~150 users</div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <small class="text-muted">Delivery Method:</small>
+                        <div class="fw-bold" id="previewDelivery">Platform notification</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Expires:</small>
+                        <div class="fw-bold" id="previewExpiry">Never</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tip:</strong> Keep your message concise and action-oriented. Users are more likely to read shorter notifications.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Templates -->
+        <div class="data-table mt-3">
+            <div class="p-3 border-bottom">
+                <h6 class="mb-0">
+                    <i class="fas fa-templates me-2"></i>
+                    Quick Templates
+                </h6>
+            </div>
+            
+            <div class="p-3">
+                <div class="template-buttons">
+                    <button class="btn btn-outline-danger btn-sm w-100 mb-2" onclick="loadTemplate('maintenance')">
+                        <i class="fas fa-tools me-1"></i>
+                        Maintenance Alert
+                    </button>
+                    
+                    <button class="btn btn-outline-warning btn-sm w-100 mb-2" onclick="loadTemplate('security')">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Security Update
+                    </button>
+                    
+                    <button class="btn btn-outline-info btn-sm w-100 mb-2" onclick="loadTemplate('feature')">
+                        <i class="fas fa-star me-1"></i>
+                        New Feature
+                    </button>
+                    
+                    <button class="btn btn-outline-success btn-sm w-100" onclick="loadTemplate('welcome')">
+                        <i class="fas fa-heart me-1"></i>
+                        Welcome Message
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Notification Modal -->
+<div class="modal fade" id="testNotificationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    Send Test Notification
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    The test notification will be sent only to your admin account. This helps you verify the appearance and content before publishing to all users.
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Test Recipient</label>
+                    <input type="email" class="form-control" value="admin@skillswap.com" readonly />
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Test Message Preview</label>
+                    <div class="border rounded p-3 bg-light" id="testPreview">
+                        <!-- Test preview will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmSendTest()">
+                    <i class="fas fa-paper-plane me-1"></i>
+                    Send Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    // Character counter
+    document.getElementById('notificationMessage').addEventListener('input', function() {
+        const charCount = this.value.length;
+        document.getElementById('charCount').textContent = charCount;
+        
+        if (charCount > 800) {
+            document.getElementById('charCount').className = 'text-warning';
+        } else if (charCount > 950) {
+            document.getElementById('charCount').className = 'text-danger';
+        } else {
+            document.getElementById('charCount').className = '';
+        }
+    });
+    
+    // Update live preview
+    function updatePreview() {
+        const title = document.getElementById('notificationTitle').value || 'Notification Title';
+        const message = document.getElementById('notificationMessage').value || 'Your notification message will appear here as you type...';
+        const type = document.getElementById('notificationType').value;
+        
+        document.getElementById('previewTitle').textContent = title;
+        document.getElementById('previewMessage').textContent = message;
+        
+        // Update icon based on type
+        const iconMap = {
+            'general': 'fas fa-bullhorn text-primary',
+            'maintenance': 'fas fa-tools text-danger',
+            'security': 'fas fa-shield-alt text-warning',
+            'feature': 'fas fa-star text-info'
+        };
+        
+        document.getElementById('previewIcon').innerHTML = `<i class="${iconMap[type]}" style="font-size: 1.5rem;"></i>`;
+        
+        // Update preview card background
+        const colorMap = {
+            'general': '#f8f9fa',
+            'maintenance': '#fff5f5',
+            'security': '#fffbf0',
+            'feature': '#f0f9ff'
+        };
+        
+        document.getElementById('previewCard').style.background = colorMap[type];
+    }
+    
+    // Update reach estimate
+    function updateReachEstimate() {
+        const audience = document.getElementById('targetAudience').value;
+        const estimates = {
+            'all': { text: 'All registered users', count: '~150 users' },
+            'active': { text: 'Active users only', count: '~120 users' },
+            'admins': { text: 'Administrator users', count: '~5 users' }
+        };
+        
+        document.getElementById('reachEstimate').innerHTML = `Estimated reach: <strong>${estimates[audience].text}</strong>`;
+        document.getElementById('previewAudience').textContent = estimates[audience].text;
+        document.getElementById('previewReach').textContent = estimates[audience].count;
+    }
+    
+    // Load quick templates
+    function loadTemplate(type) {
+        const templates = {
+            maintenance: {
+                title: 'Scheduled Maintenance Notice',
+                message: 'We will be performing scheduled maintenance on our servers from [TIME] to [TIME] on [DATE]. During this time, the platform may be temporarily unavailable. We apologize for any inconvenience and appreciate your patience.',
+                type: 'maintenance'
+            },
+            security: {
+                title: 'Important Security Update',
+                message: 'We have implemented important security enhancements to protect your account and data. Please review your account settings and consider updating your password for added security.',
+                type: 'security'
+            },
+            feature: {
+                title: 'Exciting New Feature Available!',
+                message: 'We\'re thrilled to announce a new feature that will enhance your skill-swapping experience! Check out [FEATURE NAME] in your dashboard and let us know what you think.',
+                type: 'feature'
+            },
+            welcome: {
+                title: 'Welcome to Our Growing Community!',
+                message: 'Thank you for joining our skill-swapping platform! We\'re excited to have you here. Don\'t forget to complete your profile and explore the amazing skills our community has to offer.',
+                type: 'general'
+            }
+        };
+        
+        const template = templates[type];
+        if (template) {
+            document.getElementById('notificationTitle').value = template.title;
+            document.getElementById('notificationMessage').value = template.message;
+            document.getElementById('notificationType').value = template.type;
+            
+            updatePreview();
+            updateReachEstimate();
+        }
+    }
+    
+    // Send test notification
+    function sendTestNotification() {
+        const title = document.getElementById('notificationTitle').value;
+        const message = document.getElementById('notificationMessage').value;
+        
+        if (!title || !message) {
+            alert('Please fill in both title and message before sending a test.');
+            return;
+        }
+        
+        // Update test preview
+        document.getElementById('testPreview').innerHTML = `
+            <div class="d-flex align-items-start">
+                <div class="me-3">
+                    <i class="fas fa-bell text-primary" style="font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">${title}</h6>
+                    <p class="mb-1">${message}</p>
+                    <small class="text-muted">Test notification</small>
+                </div>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('testNotificationModal'));
+        modal.show();
+    }
+    
+    function confirmSendTest() {
+        // Simulate sending test
+        alert('Test notification sent successfully to admin@skillswap.com!\n\nPlease check your notifications to verify the appearance.');
+        bootstrap.Modal.getInstance(document.getElementById('testNotificationModal')).hide();
+    }
+    
+    // Save as draft
+    function saveAsDraft() {
+        const formData = new FormData(document.querySelector('form'));
+        formData.append('save_as_draft', 'true');
+        
+        // Simulate saving draft
+        alert('Notification saved as draft!\n\nYou can find it in your drafts folder and publish it later.');
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePreview();
+        updateReachEstimate();
+        
+        // Set minimum datetime to current time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('expiresAt').min = now.toISOString().slice(0, 16);
+    });
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const title = document.getElementById('notificationTitle').value.trim();
+        const message = document.getElementById('notificationMessage').value.trim();
+        
+        if (!title || !message) {
+            e.preventDefault();
+            alert('Please fill in both title and message fields.');
+            return;
+        }
+        
+        if (title.length > 200) {
+            e.preventDefault();
+            alert('Title is too long. Please keep it under 200 characters.');
+            return;
+        }
+        
+        if (message.length > 1000) {
+            e.preventDefault();
+            alert('Message is too long. Please keep it under 1000 characters.');
+            return;
+        }
+        
+        // Confirm publication
+        if (!confirm('Are you sure you want to publish this notification? It will be sent to all selected users immediately.')) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}
