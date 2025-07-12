@@ -4,9 +4,13 @@ from auth_helpers import (
     hash_password, check_password, is_logged_in, get_current_user,
     login_user, logout_user, login_required, admin_required
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import re
+import secrets
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 main = Blueprint('main', __name__)
 
@@ -532,6 +536,112 @@ def notifications():
                          recent_received=recent_received,
                          recent_sent=recent_sent,
                          recent_feedback=recent_feedback)
+
+# Password Reset Routes
+@main.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # Generate reset token
+            reset_token = secrets.token_urlsafe(32)
+            user.reset_token = reset_token
+            user.reset_token_expires = datetime.now() + timedelta(hours=1)  # Token expires in 1 hour
+            
+            db.session.commit()
+            
+            # Send reset email (in production, use proper email service)
+            try:
+                send_reset_email(user.email, reset_token)
+                flash('Password reset instructions have been sent to your email.', 'success')
+            except Exception as e:
+                flash('Error sending email. Please try again later.', 'error')
+                # Clear the token if email fails
+                user.reset_token = None
+                user.reset_token_expires = None
+                db.session.commit()
+        else:
+            # Don't reveal if email exists or not for security
+            flash('If an account with that email exists, password reset instructions have been sent.', 'info')
+        
+        return redirect(url_for('main.login'))
+    
+    return render_template('forgot_password.html')
+
+@main.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = User.query.filter_by(reset_token=token).first()
+    
+    if not user or not user.reset_token_expires or user.reset_token_expires < datetime.now():
+        flash('Invalid or expired reset token. Please request a new password reset.', 'error')
+        return redirect(url_for('main.forgot_password'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('reset_password.html', token=token)
+        
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long.', 'error')
+            return render_template('reset_password.html', token=token)
+        
+        # Update password
+        user.password_hash = hash_password(password)
+        user.reset_token = None
+        user.reset_token_expires = None
+        
+        db.session.commit()
+        
+        flash('Your password has been reset successfully. You can now login with your new password.', 'success')
+        return redirect(url_for('main.login'))
+    
+    return render_template('reset_password.html', token=token)
+
+def send_reset_email(email, token):
+    """Send password reset email (simplified version)"""
+    # In production, use a proper email service like SendGrid, Mailgun, etc.
+    # For now, we'll just print the reset link to console
+    reset_url = f"http://127.0.0.1:5000/reset_password/{token}"
+    print(f"Password reset link for {email}: {reset_url}")
+    
+    # TODO: Implement actual email sending
+    # Example with SMTP (requires email server configuration):
+    """
+    msg = MIMEMultipart()
+    msg['From'] = 'noreply@skillswap.com'
+    msg['To'] = email
+    msg['Subject'] = 'Password Reset Request - Skill Swap'
+    
+    body = f"""
+    Hello,
+    
+    You have requested to reset your password for Skill Swap.
+    
+    Click the following link to reset your password:
+    {reset_url}
+    
+    This link will expire in 1 hour.
+    
+    If you did not request this reset, please ignore this email.
+    
+    Best regards,
+    Skill Swap Team
+    """
+    
+    msg.attach(MIMEText(body, 'plain'))
+    
+    # Configure your SMTP settings here
+    # server = smtplib.SMTP('smtp.gmail.com', 587)
+    # server.starttls()
+    # server.login('your-email@gmail.com', 'your-app-password')
+    # server.send_message(msg)
+    # server.quit()
+    """
 
 # Error handlers
 @main.errorhandler(404)
