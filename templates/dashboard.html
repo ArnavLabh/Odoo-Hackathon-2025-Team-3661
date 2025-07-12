@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Skill Swap Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+    <div>
+        <a href="{{ url_for('main.manage_skills') }}" class="btn btn-primary">
+            <i class="fas fa-cogs"></i> Manage Skills
+        </a>
+        <a href="{{ url_for('main.browse') }}" class="btn btn-outline-primary">
+            <i class="fas fa-search"></i> Browse Users
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Received Requests -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-inbox"></i> Received Requests ({{ received_requests|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if received_requests %}
+                    {% for request in received_requests %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ request.requester.name }}</strong> wants to swap
+                                <br>
+                                <small class="text-muted">
+                                    Their <span class="badge bg-info">{{ request.offered_skill.name }}</span> 
+                                    for your <span class="badge bg-success">{{ request.wanted_skill.name }}</span>
+                                </small>
+                                <br>
+                                <small class="text-muted">{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            {% if request.status == 'pending' %}
+                            <div class="btn-group-vertical btn-group-sm">
+                                <a href="{{ url_for('swaps.accept_swap', request_id=request.id) }}" 
+                                   class="btn btn-success btn-sm">Accept</a>
+                                <a href="{{ url_for('swaps.reject_swap', request_id=request.id) }}" 
+                                   class="btn btn-danger btn-sm">Reject</a>
+                            </div>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ request.status.title() }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No received requests yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sent Requests -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-paper-plane"></i> Sent Requests ({{ sent_requests|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if sent_requests %}
+                    {% for request in sent_requests %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>To: {{ request.receiver.name }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    Your <span class="badge bg-info">{{ request.offered_skill.name }}</span> 
+                                    for their <span class="badge bg-success">{{ request.wanted_skill.name }}</span>
+                                </small>
+                                <br>
+                                <small class="text-muted">{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <div>
+                                {% if request.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                <a href="{{ url_for('swaps.cancel_swap', request_id=request.id) }}" 
+                                   class="btn btn-sm btn-outline-danger ms-2">Cancel</a>
+                                {% elif request.status == 'accepted' %}
+                                <span class="badge bg-success">Accepted</span>
+                                <a href="{{ url_for('swaps.complete_swap', request_id=request.id) }}" 
+                                   class="btn btn-sm btn-primary ms-2">Mark Complete</a>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ request.status.title() }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">You haven't sent any requests yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-bar"></i> Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <h4 class="text-primary">{{ user.skills|selectattr('type', 'equalto', 'offered')|list|length }}</h4>
+                            <small class="text-muted">Skills Offered</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <h4 class="text-info">{{ user.skills|selectattr('type', 'equalto', 'wanted')|list|length }}</h4>
+                            <small class="text-muted">Skills Wanted</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <h4 class="text-success">{{ sent_requests|selectattr('status', 'equalto', 'completed')|list|length }}</h4>
+                            <small class="text-muted">Swaps Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3">
+                            <h4 class="text-warning">{{ (sent_requests|selectattr('status', 'equalto', 'pending')|list|length) + (received_requests|selectattr('status', 'equalto', 'pending')|list|length) }}</h4>
+                            <small class="text-muted">Pending Requests</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
