@@ -1,101 +1,344 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome - Skill Swap Platform{% endblock %}
+{% block title %}Skill Swap - Connect, Learn, Grow Together{% endblock %}
+
+{% block additional_css %}
+<style>
+    .hero {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: var(--gradient-primary);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+    
+    .feature-card:hover::before {
+        opacity: 0.1;
+    }
+    
+    .stats-section {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        margin: 4rem 0;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+    }
+    
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .testimonial-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin: 1rem 0;
+        transition: all 0.3s ease;
+    }
+    
+    .testimonial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-heavy);
+    }
+    
+    .testimonial-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-color);
+    }
+    
+    .cta-section {
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: 20px;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin: 4rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white" opacity="0.1"/><circle cx="80" cy="40" r="2" fill="white" opacity="0.1"/><circle cx="40" cy="80" r="2" fill="white" opacity="0.1"/></svg>');
+        animation: float 20s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="hero-section bg-primary text-white py-5 mb-5 rounded">
-    <div class="container text-center">
-        <h1 class="display-4 mb-3">
-            <i class="fas fa-exchange-alt"></i> Welcome to Skill Swap
-        </h1>
-        <p class="lead mb-4">Connect with others to exchange skills and learn together!</p>
-        {% if not session.user_id %}
-        <div class="d-flex justify-content-center gap-3">
-            <a href="{{ url_for('main.register') }}" class="btn btn-light btn-lg">
-                <i class="fas fa-user-plus"></i> Get Started
-            </a>
-            <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light btn-lg">
-                <i class="fas fa-search"></i> Browse Skills
-            </a>
-        </div>
-        {% else %}
-        <div class="d-flex justify-content-center gap-3">
-            <a href="{{ url_for('main.dashboard') }}" class="btn btn-light btn-lg">
-                <i class="fas fa-tachometer-alt"></i> Go to Dashboard
-            </a>
-            <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light btn-lg">
-                <i class="fas fa-search"></i> Browse Users
-            </a>
-        </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center">
-                <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Connect</h5>
-                <p class="card-text">Find people with the skills you want to learn and skills they want from you.</p>
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="fade-in" data-translate="hero-title">
+                Connect, Learn, and Grow with Skill Swap
+            </h1>
+            <p class="fade-in" data-translate="hero-subtitle">
+                Join our community of learners and share your skills with others. Learn new abilities while teaching what you know best.
+            </p>
+            <div class="hero-buttons fade-in">
+                {% if not session.user_id %}
+                <a href="{{ url_for('main.register') }}" class="btn-primary" data-translate="get-started">
+                    Get Started
+                </a>
+                <a href="#how-it-works" class="btn-secondary" data-translate="learn-more">
+                    Learn More
+                </a>
+                {% else %}
+                <a href="{{ url_for('main.dashboard') }}" class="btn-primary" data-translate="dashboard">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('main.browse') }}" class="btn-secondary" data-translate="browse-users">
+                    Browse Users
+                </a>
+                {% endif %}
             </div>
         </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="container">
+    <div class="stats-section fade-in">
+        <div class="row">
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number" data-count="1250">1,250</span>
+                    <div class="stat-label">Active Users</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number" data-count="500">500</span>
+                    <div class="stat-label">Skills Available</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number" data-count="850">850</span>
+                    <div class="stat-label">Successful Swaps</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number" data-count="95">95</span>
+                    <div class="stat-label">% Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container my-5">
+    <div class="text-center mb-5 fade-in">
+        <h2 class="mb-3" data-translate="features">Features</h2>
+        <p class="lead text-muted">Discover what makes Skill Swap the perfect platform for learning and teaching</p>
     </div>
     
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center">
-                <i class="fas fa-exchange-alt fa-3x text-success mb-3"></i>
-                <h5 class="card-title">Exchange</h5>
-                <p class="card-text">Trade your expertise for new knowledge in a mutually beneficial skill swap.</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body text-center">
-                <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
-                <h5 class="card-title">Grow</h5>
-                <p class="card-text">Expand your skillset and help others grow theirs in our community platform.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-{% if recent_users %}
-<div class="mt-5">
-    <h3 class="mb-4">
-        <i class="fas fa-star"></i> Featured Members
-    </h3>
     <div class="row">
-        {% for user in recent_users %}
-        <div class="col-md-4 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-2">
-                        {% if user.photo_url %}
-                        <img src="{{ url_for('static', filename=user.photo_url) }}" 
-                             class="rounded-circle me-3" width="50" height="50" alt="Profile">
-                        {% else %}
-                        <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
-                             style="width: 50px; height: 50px;">
-                            <i class="fas fa-user text-white"></i>
-                        </div>
-                        {% endif %}
-                        <div>
-                            <h6 class="card-title mb-0">{{ user.name }}</h6>
-                            {% if user.location %}
-                            <small class="text-muted">
-                                <i class="fas fa-map-marker-alt"></i> {{ user.location }}
-                            </small>
-                            {% endif %}
-                        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card fade-in">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-exchange-alt fa-3x" style="color: var(--primary-color);"></i>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            {{ user.skills|length }} skills
-                        </small>
+                    <h5 class="card-title">Easy Skill Exchange</h5>
+                    <p class="card-text">Simple and intuitive platform to offer your skills and find what you want to learn.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card fade-in">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-3x" style="color: var(--secondary-color);"></i>
+                    </div>
+                    <h5 class="card-title">Community Driven</h5>
+                    <p class="card-text">Connect with like-minded learners from around the world in a safe environment.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card fade-in">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-shield-alt fa-3x" style="color: var(--accent-color);"></i>
+                    </div>
+                    <h5 class="card-title">Safe & Secure</h5>
+                    <p class="card-text">Advanced verification and rating system ensures trustworthy skill exchanges.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card fade-in">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clock fa-3x" style="color: var(--primary-color);"></i>
+                    </div>
+                    <h5 class="card-title">Flexible Scheduling</h5>
+                    <p class="card-text">Set your availability and find others who match your schedule preferences.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card fade-in">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-star fa-3x" style="color: var(--secondary-color);"></i>
+                    </div>
+                    <h5 class="card-title">Rating System</h5>
+                    <p class="card-text">Build your reputation through quality exchanges and detailed feedback.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card fade-in">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-globe fa-3x" style="color: var(--accent-color);"></i>
+                    </div>
+                    <h5 class="card-title">Global Reach</h5>
+                    <p class="card-text">Connect with learners worldwide and experience diverse teaching styles.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="container my-5">
+    <div class="text-center mb-5 fade-in">
+        <h2 class="mb-3" data-translate="how-it-works">How It Works</h2>
+        <p class="lead text-muted">Get started in just a few simple steps</p>
+    </div>
+    
+    <div class="row align-items-center">
+        <div class="col-md-3 text-center mb-4">
+            <div class="fade-in">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3 fs-4">1</span>
+                </div>
+                <h5>Sign Up</h5>
+                <p class="text-muted">Create your account and set up your profile with your skills and interests.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 text-center mb-4">
+            <div class="fade-in">
+                <div class="step-number mb-3">
+                    <span class="badge bg-secondary rounded-circle p-3 fs-4">2</span>
+                </div>
+                <h5>Browse & Connect</h5>
+                <p class="text-muted">Search for users with skills you want to learn and send swap requests.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 text-center mb-4">
+            <div class="fade-in">
+                <div class="step-number mb-3">
+                    <span class="badge bg-success rounded-circle p-3 fs-4">3</span>
+                </div>
+                <h5>Exchange Skills</h5>
+                <p class="text-muted">Meet virtually or in person and start learning from each other.</p>
+            </div>
+        </div>
+        
+        <div class="col-md-3 text-center mb-4">
+            <div class="fade-in">
+                <div class="step-number mb-3">
+                    <span class="badge bg-info rounded-circle p-3 fs-4">4</span>
+                </div>
+                <h5>Rate & Grow</h5>
+                <p class="text-muted">Leave feedback and continue building your learning network.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Users Section -->
+{% if recent_users %}
+<section class="container my-5">
+    <div class="text-center mb-5 fade-in">
+        <h2 class="mb-3">Meet Our Community</h2>
+        <p class="lead text-muted">Connect with talented individuals ready to share their knowledge</p>
+    </div>
+    
+    <div class="row">
+        {% for user in recent_users[:6] %}
+        <div class="col-md-4 col-lg-2 mb-4">
+            <div class="card text-center fade-in">
+                <div class="card-body">
+                    {% if user.photo_url %}
+                    <img src="{{ url_for('static', filename=user.photo_url) }}" 
+                         alt="{{ user.name }}" 
+                         class="testimonial-avatar mb-3">
+                    {% else %}
+                    <div class="testimonial-avatar mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                         style="background: var(--gradient-primary); color: white; font-size: 1.5rem; font-weight: 600;">
+                        {{ user.name[0].upper() }}
+                    </div>
+                    {% endif %}
+                    <h6 class="card-title">{{ user.name }}</h6>
+                    {% if user.location %}
+                    <small class="text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        {{ user.location }}
+                    </small>
+                    {% endif %}
+                    <div class="mt-3">
                         <a href="{{ url_for('main.view_user', user_id=user.id) }}" 
                            class="btn btn-sm btn-outline-primary">
                             View Profile
@@ -106,16 +349,179 @@
         </div>
         {% endfor %}
     </div>
-</div>
+    
+    <div class="text-center mt-4 fade-in">
+        <a href="{{ url_for('main.browse') }}" class="btn-primary">
+            Browse All Users
+        </a>
+    </div>
+</section>
 {% endif %}
 
-<div class="text-center mt-5 p-4 bg-light rounded">
-    <h4>Ready to start swapping skills?</h4>
-    <p class="mb-3">Join our community of learners and teachers today!</p>
-    {% if not session.user_id %}
-    <a href="{{ url_for('main.register') }}" class="btn btn-primary">
-        <i class="fas fa-rocket"></i> Join Now
-    </a>
-    {% endif %}
-</div>
+<!-- Testimonials Section -->
+<section class="container my-5">
+    <div class="text-center mb-5 fade-in">
+        <h2 class="mb-3" data-translate="testimonials">Testimonials</h2>
+        <p class="lead text-muted">What our community members say about Skill Swap</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="testimonial-card fade-in">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="testimonial-avatar me-3" style="background: var(--gradient-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                        S
+                    </div>
+                    <div>
+                        <h6 class="mb-0">Sarah Johnson</h6>
+                        <small class="text-muted">Graphic Designer</small>
+                    </div>
+                </div>
+                <p class="mb-3">"I learned Python programming in exchange for teaching Photoshop. The community here is incredibly supportive and knowledgeable!"</p>
+                <div class="rating">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="testimonial-card fade-in">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="testimonial-avatar me-3" style="background: var(--gradient-secondary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                        M
+                    </div>
+                    <div>
+                        <h6 class="mb-0">Mike Chen</h6>
+                        <small class="text-muted">Software Developer</small>
+                    </div>
+                </div>
+                <p class="mb-3">"Amazing platform! I taught web development and learned digital marketing. It's a win-win for everyone involved."</p>
+                <div class="rating">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="testimonial-card fade-in">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="testimonial-avatar me-3" style="background: var(--gradient-accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                        L
+                    </div>
+                    <div>
+                        <h6 class="mb-0">Lisa Rodriguez</h6>
+                        <small class="text-muted">Content Writer</small>
+                    </div>
+                </div>
+                <p class="mb-3">"The flexibility of scheduling and the quality of learners here is outstanding. I've made lasting connections while growing my skills."</p>
+                <div class="rating">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="container">
+    <div class="cta-section fade-in">
+        <h2 class="mb-3">Ready to Start Your Learning Journey?</h2>
+        <p class="lead mb-4">Join thousands of learners who are already growing their skills together</p>
+        {% if not session.user_id %}
+        <a href="{{ url_for('main.register') }}" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-user-plus me-2"></i>
+            Join Now - It's Free
+        </a>
+        <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-search me-2"></i>
+            Browse Skills
+        </a>
+        {% else %}
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Go to Dashboard
+        </a>
+        <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-search me-2"></i>
+            Find Skills to Learn
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    // Animate statistics counter
+    function animateStats() {
+        const statNumbers = document.querySelectorAll('.stat-number');
+        
+        statNumbers.forEach(stat => {
+            const target = parseInt(stat.getAttribute('data-count'));
+            const increment = target / 100;
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                stat.textContent = Math.floor(current).toLocaleString();
+            }, 20);
+        });
+    }
+    
+    // Trigger animation when stats section is visible
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateStats();
+                statsObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    const statsSection = document.querySelector('.stats-section');
+    if (statsSection) {
+        statsObserver.observe(statsSection);
+    }
+    
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Add hover effects to feature cards
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) rotateX(5deg)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) rotateX(0)';
+        });
+    });
+</script>
 {% endblock %}
