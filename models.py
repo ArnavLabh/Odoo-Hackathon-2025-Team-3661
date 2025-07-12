@@ -18,6 +18,10 @@ class User(db.Model):
     google_id = db.Column(db.String(50), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     last_login = db.Column(db.DateTime, default=datetime.now)
+    
+    # Password reset fields
+    reset_token = db.Column(db.String(100), unique=True, nullable=True)
+    reset_token_expires = db.Column(db.DateTime, nullable=True)
 
     skills = db.relationship('UserSkill', backref='user', lazy=True)
     sent_requests = db.relationship('SwapRequest', foreign_keys='SwapRequest.from_user_id', backref='requester', lazy=True)
