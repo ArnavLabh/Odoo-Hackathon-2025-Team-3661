@@ -96,7 +96,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user me-1"></i>
-                            My Account
+                            <span data-translate="my-account">My Account</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end glass-container">
                             <li>
@@ -108,7 +108,7 @@
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('main.manage_skills') }}">
                                     <i class="fas fa-cogs me-2"></i>
-                                    Manage Skills
+                                    <span data-translate="manage-skills">Manage Skills</span>
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
@@ -182,50 +182,50 @@
                     
                     <div class="col-lg-2 col-md-6 mb-4">
                         <div class="footer-section">
-                            <h6 class="mb-3">Platform</h6>
+                            <h6 class="mb-3" data-translate="platform">Platform</h6>
                             <ul class="footer-links list-unstyled">
-                                <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                                <li><a href="{{ url_for('main.browse') }}">Browse Users</a></li>
+                                <li><a href="{{ url_for('main.index') }}" data-translate="home">Home</a></li>
+                                <li><a href="{{ url_for('main.browse') }}" data-translate="browse-users">Browse Users</a></li>
                                 {% if not session.user_id %}
-                                <li><a href="{{ url_for('main.register') }}">Join Now</a></li>
+                                <li><a href="{{ url_for('main.register') }}" data-translate="join-now">Join Now</a></li>
                                 {% endif %}
-                                <li><a href="#">How It Works</a></li>
+                                <li><a href="#" data-translate="how-it-works">How It Works</a></li>
                             </ul>
                         </div>
                     </div>
                     
                     <div class="col-lg-2 col-md-6 mb-4">
                         <div class="footer-section">
-                            <h6 class="mb-3">Support</h6>
+                            <h6 class="mb-3" data-translate="support">Support</h6>
                             <ul class="footer-links list-unstyled">
-                                <li><a href="#">Help Center</a></li>
-                                <li><a href="#">Community Guidelines</a></li>
-                                <li><a href="#">Safety Tips</a></li>
-                                <li><a href="#">Contact Us</a></li>
+                                <li><a href="#" data-translate="help-center">Help Center</a></li>
+                                <li><a href="#" data-translate="community-guidelines">Community Guidelines</a></li>
+                                <li><a href="#" data-translate="safety-tips">Safety Tips</a></li>
+                                <li><a href="#" data-translate="contact-us">Contact Us</a></li>
                             </ul>
                         </div>
                     </div>
                     
                     <div class="col-lg-2 col-md-6 mb-4">
                         <div class="footer-section">
-                            <h6 class="mb-3">Legal</h6>
+                            <h6 class="mb-3" data-translate="legal">Legal</h6>
                             <ul class="footer-links list-unstyled">
-                                <li><a href="#">Privacy Policy</a></li>
-                                <li><a href="#">Terms of Service</a></li>
-                                <li><a href="#">Cookie Policy</a></li>
-                                <li><a href="#">DMCA</a></li>
+                                <li><a href="#" data-translate="privacy-policy">Privacy Policy</a></li>
+                                <li><a href="#" data-translate="terms-of-service">Terms of Service</a></li>
+                                <li><a href="#" data-translate="cookie-policy">Cookie Policy</a></li>
+                                <li><a href="#" data-translate="dmca">DMCA</a></li>
                             </ul>
                         </div>
                     </div>
                     
                     <div class="col-lg-2 col-md-6 mb-4">
                         <div class="footer-section">
-                            <h6 class="mb-3">Company</h6>
+                            <h6 class="mb-3" data-translate="company">Company</h6>
                             <ul class="footer-links list-unstyled">
-                                <li><a href="#">About Us</a></li>
-                                <li><a href="#">Careers</a></li>
-                                <li><a href="#">Press</a></li>
-                                <li><a href="#">Blog</a></li>
+                                <li><a href="#" data-translate="about-us">About Us</a></li>
+                                <li><a href="#" data-translate="careers">Careers</a></li>
+                                <li><a href="#" data-translate="press">Press</a></li>
+                                <li><a href="#" data-translate="blog">Blog</a></li>
                             </ul>
                         </div>
                     </div>
@@ -243,15 +243,15 @@
                         <div class="footer-badges">
                             <span class="badge bg-primary me-2">
                                 <i class="fas fa-shield-alt me-1"></i>
-                                Secure
+                                <span data-translate="secure">Secure</span>
                             </span>
                             <span class="badge bg-success me-2">
                                 <i class="fas fa-users me-1"></i>
-                                Community Driven
+                                <span data-translate="community-driven">Community Driven</span>
                             </span>
                             <span class="badge bg-info">
                                 <i class="fas fa-globe me-1"></i>
-                                Global
+                                <span data-translate="global">Global</span>
                             </span>
                         </div>
                     </div>

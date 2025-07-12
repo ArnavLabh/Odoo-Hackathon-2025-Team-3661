@@ -279,7 +279,7 @@
             
             <div class="auth-header">
                 <h1 data-translate="login">Login</h1>
-                <p>Welcome back! Please sign in to your account</p>
+                <p data-translate="welcome-back">Welcome back! Please sign in to your account</p>
             </div>
             
             <div class="auth-body">
@@ -288,7 +288,7 @@
                 <div class="social-login">
                     <a href="{{ url_for('auth.google_login') }}" class="btn-social">
                         <i class="fab fa-google google"></i>
-                        Continue with Google
+                        <span data-translate="continue-with-google">Continue with Google</span>
                     </a>
                 </div>
                 {% endif %}
@@ -325,7 +325,7 @@
                     </div>
                     
                     <div class="forgot-password">
-                        <a href="{{ url_for('main.forgot_password') }}">Forgot your password?</a>
+                        <a href="{{ url_for('main.forgot_password') }}" data-translate="forgot-password">Forgot your password?</a>
                     </div>
                     
                     <button type="submit" class="btn-auth" id="loginBtn" data-translate="sign-in">
