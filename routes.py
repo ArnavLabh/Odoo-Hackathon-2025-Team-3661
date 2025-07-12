@@ -1,6 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from models import User, Skill, UserSkill, SwapRequest, Feedback, db
-import bcrypt
+from auth_helpers import (
+    hash_password, check_password, is_logged_in, get_current_user,
+    login_user, logout_user, login_required, admin_required
+)
 from datetime import datetime
 import os
 import re
@@ -33,32 +36,39 @@ def secure_filename(filename):
     
     return filename
 
-# Helper functions
-def hash_password(password):
-    """Hash a password using bcrypt"""
-    password_bytes = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password_bytes, salt).decode('utf-8')
-
-def check_password(password, hashed_password):
-    """Check if password matches the hashed password"""
-    password_bytes = password.encode('utf-8')
-    hashed_bytes = hashed_password.encode('utf-8')
-    return bcrypt.checkpw(password_bytes, hashed_bytes)
-
-def is_logged_in():
-    return 'user_id' in session
-
-def get_current_user():
-    if is_logged_in():
-        return User.query.get(session['user_id'])
-    return None
-
 # Home page
 @main.route('/')
 def index():
     recent_users = User.query.filter_by(is_public=True, is_banned=False).limit(6).all()
     return render_template('index.html', recent_users=recent_users)
+
+# Dashboard route (shows user dashboard with recent activity)
+@main.route('/dashboard')
+@login_required
+def dashboard():
+    user = get_current_user()
+    
+    # Get recent swap requests (sent and received)
+    sent_requests = SwapRequest.query.filter_by(from_user_id=user.id).order_by(SwapRequest.created_at.desc()).limit(5).all()
+    received_requests = SwapRequest.query.filter_by(to_user_id=user.id).order_by(SwapRequest.created_at.desc()).limit(5).all()
+    
+    # Get user's skills
+    offered_skills = UserSkill.query.filter_by(user_id=user.id, type='offered').all()
+    wanted_skills = UserSkill.query.filter_by(user_id=user.id, type='wanted').all()
+    
+    # Get recent feedback received
+    recent_feedback = db.session.query(Feedback).join(SwapRequest).filter(
+        ((SwapRequest.from_user_id == user.id) | (SwapRequest.to_user_id == user.id)) &
+        (Feedback.reviewer_id != user.id)
+    ).order_by(Feedback.id.desc()).limit(3).all()
+    
+    return render_template('dashboard.html', 
+                         user=user,
+                         sent_requests=sent_requests,
+                         received_requests=received_requests,
+                         offered_skills=offered_skills,
+                         wanted_skills=wanted_skills,
+                         recent_feedback=recent_feedback)
 
 # User Authentication Routes
 @main.route('/register', methods=['GET', 'POST'])
@@ -88,7 +98,8 @@ def register():
         db.session.add(new_user)
         db.session.commit()
         
-        session['user_id'] = new_user.id
+        # Login the user
+        tokens = login_user(new_user)
         flash('Registration successful! Welcome to Skill Swap!', 'success')
         return redirect(url_for('main.profile'))
     
@@ -113,11 +124,8 @@ def login():
                     flash('Your account has been banned. Please contact support.', 'error')
                     return redirect(url_for('main.login'))
                 
-                # Update last login
-                user.last_login = datetime.now()
-                db.session.commit()
-                
-                session['user_id'] = user.id
+                # Login the user
+                tokens = login_user(user)
                 flash(f'Welcome back, {user.name}!', 'success')
                 return redirect(url_for('main.dashboard'))
             else:
@@ -129,17 +137,14 @@ def login():
 
 @main.route('/logout')
 def logout():
-    session.pop('user_id', None)
+    logout_user()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('main.index'))
 
 # User Profile Routes
 @main.route('/profile')
+@login_required
 def profile():
-    if not is_logged_in():
-        flash('Please login to view your profile.', 'error')
-        return redirect(url_for('main.login'))
-    
     user = get_current_user()
     offered_skills = UserSkill.query.filter_by(user_id=user.id, type='offered').all()
     wanted_skills = UserSkill.query.filter_by(user_id=user.id, type='wanted').all()
@@ -147,11 +152,8 @@ def profile():
     return render_template('profile.html', user=user, offered_skills=offered_skills, wanted_skills=wanted_skills)
 
 @main.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
 def edit_profile():
-    if not is_logged_in():
-        flash('Please login to edit your profile.', 'error')
-        return redirect(url_for('main.login'))
-    
     user = get_current_user()
     
     if request.method == 'POST':

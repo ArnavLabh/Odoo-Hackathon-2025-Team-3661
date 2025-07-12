@@ -1,17 +1,62 @@
 from flask import Blueprint, jsonify, request, session
+from flask_jwt_extended import jwt_required, create_access_token
 from models import User, Skill, UserSkill, SwapRequest, Feedback, db
+from auth_helpers import get_current_user, get_current_user_jwt, check_password
 import json
 
 api = Blueprint('api', __name__)
 
-# Helper functions
+# API Authentication Routes
+@api.route('/api/auth/login', methods=['POST'])
+def api_login():
+    """API login endpoint that returns JWT tokens"""
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not email or not password:
+        return jsonify({'error': 'Email and password required'}), 400
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if user and user.password_hash and check_password(password, user.password_hash):
+        if user.is_banned:
+            return jsonify({'error': 'Account banned'}), 403
+        
+        # Create JWT tokens
+        access_token = create_access_token(identity=user.id)
+        
+        return jsonify({
+            'access_token': access_token,
+            'user': {
+                'id': user.id,
+                'name': user.name,
+                'email': user.email
+            }
+        })
+    
+    return jsonify({'error': 'Invalid credentials'}), 401
+
+@api.route('/api/auth/profile')
+@jwt_required()
+def api_profile():
+    """Get current user profile via JWT"""
+    user = get_current_user_jwt()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    return jsonify({
+        'id': user.id,
+        'name': user.name,
+        'email': user.email,
+        'location': user.location,
+        'availability': user.availability,
+        'is_public': user.is_public
+    })
+
+# Helper functions  
 def is_logged_in():
     return 'user_id' in session
-
-def get_current_user():
-    if is_logged_in():
-        return User.query.get(session['user_id'])
-    return None
 
 # API Routes for AJAX calls
 @api.route('/api/skills/search')
