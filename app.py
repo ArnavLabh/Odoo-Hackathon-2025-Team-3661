@@ -14,7 +14,10 @@ def create_app():
     jwt.init_app(app)
 
     # Import models after db initialization to avoid circular imports
-    from models import User, Skill, UserSkill, SwapRequest, Feedback
+    from models import (
+        User, Skill, UserSkill, SwapRequest, Feedback,
+        SkillDescription, BanHistory, PlatformNotification
+    )
 
     # Register blueprints
     from routes import main
@@ -84,6 +87,17 @@ def create_app():
                 # --- DEMO USERS AND SKILLS ---
                 from models import User, Skill, UserSkill
                 if User.query.count() < 5:  # Only add if not already present
+                    # Add default admin user
+                    admin_email = "admin@skillswap.com"
+                    admin_user = User.query.filter_by(email=admin_email).first()
+                    if not admin_user:
+                        import hashlib
+                        admin_password = "admin123"
+                        admin_hash = hashlib.sha256(admin_password.encode('utf-8')).hexdigest()
+                        admin_user = User(name="Admin", email=admin_email, password_hash=admin_hash, is_admin=True)
+                        db.session.add(admin_user)
+                        db.session.commit()
+
                     demo_users = [
                         {"name": "Alice Smith", "email": "alice@example.com", "skills": ["Python", "Flask", "Public Speaking"]},
                         {"name": "Bob Johnson", "email": "bob@example.com", "skills": ["JavaScript", "React", "Cooking"]},

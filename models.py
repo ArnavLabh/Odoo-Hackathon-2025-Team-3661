@@ -105,6 +105,57 @@ class Feedback(db.Model):
     reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     rating = db.Column(db.Integer)  # 1 to 5
     comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     swap = db.relationship('SwapRequest', backref='feedback')
     reviewer = db.relationship('User', backref='given_feedback')
+
+# Admin Enhancement Models
+
+class SkillDescription(db.Model):
+    """For moderating skill descriptions - Key missing feature"""
+    __tablename__ = 'skill_description'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    skill_id = db.Column(db.Integer, db.ForeignKey('skill.id'), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    is_approved = db.Column(db.Boolean, default=False)
+    is_reported = db.Column(db.Boolean, default=False)
+    moderation_status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    moderated_at = db.Column(db.DateTime, nullable=True)
+    moderated_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    moderator_notes = db.Column(db.Text, nullable=True)
+
+    user = db.relationship('User', foreign_keys=[user_id], backref='skill_descriptions')
+    skill = db.relationship('Skill', backref='descriptions')
+    moderator = db.relationship('User', foreign_keys=[moderated_by])
+
+class BanHistory(db.Model):
+    """Track ban history - Another missing feature"""
+    __tablename__ = 'ban_history'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    banned_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ban_reason = db.Column(db.Text, nullable=False)
+    banned_at = db.Column(db.DateTime, default=datetime.now)
+    unbanned_at = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+
+    user = db.relationship('User', foreign_keys=[user_id], backref='ban_history')
+    admin = db.relationship('User', foreign_keys=[banned_by])
+
+class PlatformNotification(db.Model):
+    """Enhanced broadcasting system"""
+    __tablename__ = 'platform_notification'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    notification_type = db.Column(db.String(50), default='general')  # maintenance, security, feature, general
+    target_audience = db.Column(db.String(20), default='all')  # all, active, admins
+    is_active = db.Column(db.Boolean, default=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    expires_at = db.Column(db.DateTime, nullable=True)
+
+    creator = db.relationship('User', backref='notifications_created')

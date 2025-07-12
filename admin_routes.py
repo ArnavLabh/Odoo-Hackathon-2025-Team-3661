@@ -1,7 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from models import User, Skill, UserSkill, SwapRequest, Feedback, db
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, send_file
+from models import (
+    User, Skill, UserSkill, SwapRequest, Feedback,
+    SkillDescription, BanHistory, PlatformNotification, db
+)
 from datetime import datetime, timedelta
 import json
+import csv
+import io
 
 admin = Blueprint('admin', __name__)
 
@@ -95,32 +100,96 @@ def user_list():
                          search=search, 
                          status_filter=status_filter)
 
-@admin.route('/ban_user/<int:user_id>')
+@admin.route('/ban_user/<int:user_id>', methods=['GET', 'POST'])
 @admin_required
 def ban_user(user_id):
-    """Ban a user"""
+    """Enhanced ban user with history tracking - MISSING FEATURE"""
     user = User.query.get_or_404(user_id)
     
     if user.is_admin:
         flash('Cannot ban an admin user.', 'error')
         return redirect(url_for('admin.user_list'))
     
+    if request.method == 'POST':
+        reason = request.form.get('reason', 'No reason provided')
+        current_user_id = session.get('user_id')
+        
+        # Update user status
+        user.is_banned = True
+        
+        # Create ban history record - NEW FEATURE
+        ban_record = BanHistory(
+            user_id=user_id,
+            banned_by=current_user_id,
+            ban_reason=reason,
+            is_active=True
+        )
+        
+        db.session.add(ban_record)
+        db.session.commit()
+        
+        flash(f'User {user.name} has been banned. Reason: {reason}', 'success')
+        return redirect(url_for('admin.user_list'))
+    
+    # For GET request, show ban form with reason input
+    return render_template('admin/ban_user_form.html', user=user)
+
+@admin.route('/ban_user_quick/<int:user_id>/<reason>')
+@admin_required
+def ban_user_quick(user_id, reason):
+    """Quick ban with predefined reasons"""
+    user = User.query.get_or_404(user_id)
+    
+    if user.is_admin:
+        flash('Cannot ban an admin user.', 'error')
+        return redirect(url_for('admin.user_list'))
+    
+    current_user_id = session.get('user_id')
+    reason_text = reason.replace('_', ' ').title()
+    
     user.is_banned = True
+    
+    ban_record = BanHistory(
+        user_id=user_id,
+        banned_by=current_user_id,
+        ban_reason=reason_text,
+        is_active=True
+    )
+    
+    db.session.add(ban_record)
     db.session.commit()
     
-    flash(f'User {user.name} has been banned.', 'success')
+    flash(f'User {user.name} has been banned for: {reason_text}', 'success')
     return redirect(url_for('admin.user_list'))
 
 @admin.route('/unban_user/<int:user_id>')
 @admin_required
 def unban_user(user_id):
-    """Unban a user"""
+    """Enhanced unban with history tracking"""
     user = User.query.get_or_404(user_id)
     user.is_banned = False
+    
+    # Update ban history - ENHANCED FEATURE
+    active_ban = BanHistory.query.filter_by(user_id=user_id, is_active=True).first()
+    if active_ban:
+        active_ban.is_active = False
+        active_ban.unbanned_at = datetime.now()
+    
     db.session.commit()
     
     flash(f'User {user.name} has been unbanned.', 'success')
     return redirect(url_for('admin.user_list'))
+
+@admin.route('/user_ban_history/<int:user_id>')
+@admin_required
+def user_ban_history(user_id):
+    """View ban history for a user - NEW FEATURE"""
+    user = User.query.get_or_404(user_id)
+    ban_history = BanHistory.query.filter_by(user_id=user_id).order_by(
+        BanHistory.banned_at.desc()
+    ).all()
+    
+    return render_template('admin/ban_history.html', user=user, ban_history=ban_history)
 
 @admin.route('/delete_user/<int:user_id>')
 @admin_required
@@ -222,91 +291,318 @@ def delete_skill(skill_id):
     flash(f'Skill "{skill.name}" has been deleted.', 'success')
     return redirect(url_for('admin.skill_moderation'))
 
-# Broadcasting
+# NEW FEATURE: Skill Description Moderation
+@admin.route('/skill_descriptions')
+@admin_required
+def skill_descriptions():
+    """Moderate skill descriptions - CORE MISSING FEATURE"""
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', 'pending')  # pending, approved, rejected, reported
+    
+    query = SkillDescription.query
+    
+    if status_filter == 'pending':
+        query = query.filter_by(moderation_status='pending')
+    elif status_filter == 'approved':
+        query = query.filter_by(moderation_status='approved')
+    elif status_filter == 'rejected':
+        query = query.filter_by(moderation_status='rejected')
+    elif status_filter == 'reported':
+        query = query.filter_by(is_reported=True)
+    
+    descriptions = query.order_by(SkillDescription.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    # Count statistics for dashboard
+    pending_count = SkillDescription.query.filter_by(moderation_status='pending').count()
+    reported_count = SkillDescription.query.filter_by(is_reported=True).count()
+    
+    return render_template('admin/skill_descriptions.html', 
+                         descriptions=descriptions, 
+                         status_filter=status_filter,
+                         pending_count=pending_count,
+                         reported_count=reported_count)
+
+@admin.route('/moderate_skill_description/<int:desc_id>/<action>', methods=['POST'])
+@admin_required
+def moderate_skill_description(desc_id, action):
+    """Approve or reject skill description - CORE MISSING FEATURE"""
+    if action not in ['approve', 'reject']:
+        flash('Invalid action.', 'error')
+        return redirect(url_for('admin.skill_descriptions'))
+    
+    description = SkillDescription.query.get_or_404(desc_id)
+    current_user_id = session.get('user_id')
+    
+    # Get moderator notes if provided
+    moderator_notes = request.form.get('moderator_notes', '')
+    
+    description.moderation_status = 'approved' if action == 'approve' else 'rejected'
+    description.is_approved = action == 'approve'
+    description.moderated_by = current_user_id
+    description.moderated_at = datetime.now()
+    description.moderator_notes = moderator_notes
+    
+    db.session.commit()
+    
+    flash(f'Skill description {action}ed successfully.', 'success')
+    return redirect(url_for('admin.skill_descriptions'))
+
+@admin.route('/mark_skill_description_reported/<int:desc_id>')
+@admin_required
+def mark_skill_description_reported(desc_id):
+    """Mark a skill description as reported"""
+    description = SkillDescription.query.get_or_404(desc_id)
+    description.is_reported = True
+    db.session.commit()
+    
+    flash('Skill description marked as reported.', 'warning')
+    return redirect(url_for('admin.skill_descriptions'))
+
+# ENHANCED Broadcasting and Notifications System
+@admin.route('/notifications')
+@admin_required
+def notifications():
+    """Manage platform notifications - ENHANCED FEATURE"""
+    page = request.args.get('page', 1, type=int)
+    
+    notifications = PlatformNotification.query.order_by(
+        PlatformNotification.created_at.desc()
+    ).paginate(page=page, per_page=20, error_out=False)
+    
+    return render_template('admin/notifications.html', notifications=notifications)
+
+@admin.route('/create_notification', methods=['GET', 'POST'])
+@admin_required
+def create_notification():
+    """Create platform-wide notification - NEW FEATURE"""
+    if request.method == 'POST':
+        title = request.form.get('title')
+        message = request.form.get('message')
+        notification_type = request.form.get('notification_type', 'general')
+        target_audience = request.form.get('target_audience', 'all')
+        expires_at = request.form.get('expires_at')
+        current_user_id = session.get('user_id')
+        
+        if not title or not message:
+            flash('Title and message are required.', 'error')
+            return render_template('admin/create_notification.html')
+        
+        notification = PlatformNotification(
+            title=title,
+            message=message,
+            notification_type=notification_type,
+            target_audience=target_audience,
+            created_by=current_user_id,
+            expires_at=datetime.fromisoformat(expires_at) if expires_at else None
+        )
+        
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Calculate reach
+        if target_audience == 'all':
+            recipient_count = User.query.count()
+        elif target_audience == 'active':
+            recipient_count = User.query.filter_by(is_banned=False).count()
+        elif target_audience == 'admins':
+            recipient_count = User.query.filter_by(is_admin=True).count()
+        else:
+            recipient_count = 0
+        
+        flash(f'Notification created successfully. Will reach {recipient_count} users.', 'success')
+        return redirect(url_for('admin.notifications'))
+    
+    return render_template('admin/create_notification.html')
+
+@admin.route('/toggle_notification/<int:notification_id>')
+@admin_required
+def toggle_notification(notification_id):
+    """Toggle notification active status"""
+    notification = PlatformNotification.query.get_or_404(notification_id)
+    notification.is_active = not notification.is_active
+    db.session.commit()
+    
+    status = 'activated' if notification.is_active else 'deactivated'
+    flash(f'Notification {status} successfully.', 'success')
+    return redirect(url_for('admin.notifications'))
+
+@admin.route('/delete_notification/<int:notification_id>')
+@admin_required
+def delete_notification(notification_id):
+    """Delete a notification"""
+    notification = PlatformNotification.query.get_or_404(notification_id)
+    db.session.delete(notification)
+    db.session.commit()
+    
+    flash('Notification deleted successfully.', 'success')
+    return redirect(url_for('admin.notifications'))
+
+# Legacy broadcast route for compatibility
 @admin.route('/broadcast', methods=['GET', 'POST'])
 @admin_required
 def broadcast():
-    """Send platform-wide messages"""
+    """Legacy broadcast - redirects to new notification system"""
     if request.method == 'POST':
-        subject = request.form.get('subject')
-        message = request.form.get('message')
-        recipient_type = request.form.get('recipient_type')  # all, active, admins
-        
-        # Here you would typically integrate with an email service or notification system
-        # For now, we'll just flash a success message
-        
-        if recipient_type == 'all':
-            recipient_count = User.query.count()
-        elif recipient_type == 'active':
-            recipient_count = User.query.filter_by(is_banned=False).count()
-        elif recipient_type == 'admins':
-            recipient_count = User.query.filter_by(is_admin=True).count()
-        
-        # In a real implementation, you would send emails/notifications here
-        flash(f'Message "{subject}" would be sent to {recipient_count} users.', 'success')
-        return redirect(url_for('admin.broadcast'))
+        # Convert old format to new notification format
+        return redirect(url_for('admin.create_notification'))
     
-    # Get user counts for the form
-    all_users = User.query.count()
-    active_users = User.query.filter_by(is_banned=False).count()
-    admin_users = User.query.filter_by(is_admin=True).count()
-    
-    return render_template('broadcast.html', 
-                         all_users=all_users,
-                         active_users=active_users,
-                         admin_users=admin_users)
+    return redirect(url_for('admin.notifications'))
 
-# Reports and Analytics
+# ENHANCED Reports and Analytics with ACTUAL Downloads
 @admin.route('/download_user_report')
 @admin_required
 def download_user_report():
-    """Download user activity report"""
-    users = User.query.all()
-    
-    # Generate CSV data
-    csv_data = "ID,Name,Email,Location,Is_Public,Is_Banned,Offered_Skills,Wanted_Skills,Swaps_Sent,Swaps_Received\n"
-    
-    for user in users:
-        offered_count = UserSkill.query.filter_by(user_id=user.id, type='offered').count()
-        wanted_count = UserSkill.query.filter_by(user_id=user.id, type='wanted').count()
-        swaps_sent = SwapRequest.query.filter_by(from_user_id=user.id).count()
-        swaps_received = SwapRequest.query.filter_by(to_user_id=user.id).count()
+    """Download comprehensive user activity report - ENHANCED FEATURE"""
+    try:
+        users = User.query.all()
         
-        csv_data += f"{user.id},{user.name},{user.email},{user.location or ''},{user.is_public},{user.is_banned},{offered_count},{wanted_count},{swaps_sent},{swaps_received}\n"
-    
-    # In a real implementation, you would return this as a downloadable file
-    flash('User report would be downloaded (CSV functionality not implemented).', 'info')
-    return redirect(url_for('admin.admin_dashboard'))
+        # Create CSV in memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header with more detailed columns
+        writer.writerow([
+            'ID', 'Name', 'Email', 'Location', 'Is_Public', 'Is_Banned', 'Is_Admin',
+            'Registration_Date', 'Last_Login', 'Offered_Skills', 'Wanted_Skills',
+            'Swaps_Sent', 'Swaps_Received', 'Ban_Count', 'Active_Swaps'
+        ])
+        
+        # Write data
+        for user in users:
+            offered_count = UserSkill.query.filter_by(user_id=user.id, type='offered').count()
+            wanted_count = UserSkill.query.filter_by(user_id=user.id, type='wanted').count()
+            swaps_sent = SwapRequest.query.filter_by(from_user_id=user.id).count()
+            swaps_received = SwapRequest.query.filter_by(to_user_id=user.id).count()
+            ban_count = BanHistory.query.filter_by(user_id=user.id).count()
+            active_swaps = SwapRequest.query.filter(
+                (SwapRequest.from_user_id == user.id) | (SwapRequest.to_user_id == user.id),
+                SwapRequest.status == 'pending'
+            ).count()
+            
+            writer.writerow([
+                user.id, user.name, user.email, user.location or '',
+                user.is_public, user.is_banned, user.is_admin,
+                user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '',
+                user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '',
+                offered_count, wanted_count, swaps_sent, swaps_received,
+                ban_count, active_swaps
+            ])
+        
+        # Create file-like object for download
+        output.seek(0)
+        file_data = io.BytesIO()
+        file_data.write(output.getvalue().encode('utf-8'))
+        file_data.seek(0)
+        
+        return send_file(
+            file_data,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'user_activity_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        )
+        
+    except Exception as e:
+        flash(f'Error generating user report: {str(e)}', 'error')
+        return redirect(url_for('admin.admin_dashboard'))
 
 @admin.route('/download_swap_report')
 @admin_required
 def download_swap_report():
-    """Download swap activity report"""
-    swaps = SwapRequest.query.all()
-    
-    # Generate CSV data
-    csv_data = "ID,From_User,To_User,Offered_Skill,Wanted_Skill,Status,Created_Date\n"
-    
-    for swap in swaps:
-        csv_data += f"{swap.id},{swap.requester.name},{swap.receiver.name},{swap.offered_skill.name if swap.offered_skill else ''},{swap.wanted_skill.name if swap.wanted_skill else ''},{swap.status},{swap.created_at}\n"
-    
-    # In a real implementation, you would return this as a downloadable file
-    flash('Swap report would be downloaded (CSV functionality not implemented).', 'info')
-    return redirect(url_for('admin.admin_dashboard'))
+    """Download enhanced swap statistics report - ENHANCED FEATURE"""
+    try:
+        swaps = SwapRequest.query.all()
+        
+        # Create CSV in memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Enhanced header with success metrics
+        writer.writerow([
+            'ID', 'Requester_Name', 'Requester_Email', 'Receiver_Name', 'Receiver_Email',
+            'Offered_Skill', 'Wanted_Skill', 'Status', 'Created_Date', 'Days_Active',
+            'Feedback_Count', 'Has_Rating', 'Success_Rate_Indicator'
+        ])
+        
+        # Write enhanced data
+        for swap in swaps:
+            days_active = (datetime.now() - swap.created_at).days if swap.created_at else 0
+            feedback_count = len(swap.feedback) if hasattr(swap, 'feedback') else 0
+            has_rating = any(f.rating for f in swap.feedback) if hasattr(swap, 'feedback') else False
+            success_indicator = 'SUCCESS' if swap.status == 'completed' else 'PENDING' if swap.status == 'pending' else 'FAILED'
+            
+            writer.writerow([
+                swap.id, swap.requester.name, swap.requester.email,
+                swap.receiver.name, swap.receiver.email,
+                swap.offered_skill.name if swap.offered_skill else 'N/A',
+                swap.wanted_skill.name if swap.wanted_skill else 'N/A',
+                swap.status, swap.created_at.strftime('%Y-%m-%d %H:%M') if swap.created_at else '',
+                days_active, feedback_count, 'Yes' if has_rating else 'No', success_indicator
+            ])
+        
+        # Create file-like object for download
+        output.seek(0)
+        file_data = io.BytesIO()
+        file_data.write(output.getvalue().encode('utf-8'))
+        file_data.seek(0)
+        
+        return send_file(
+            file_data,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'swap_statistics_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        )
+        
+    except Exception as e:
+        flash(f'Error generating swap report: {str(e)}', 'error')
+        return redirect(url_for('admin.admin_dashboard'))
 
 @admin.route('/download_feedback_report')
 @admin_required
 def download_feedback_report():
-    """Download feedback logs"""
-    feedback_list = Feedback.query.all()
-    
-    # Generate CSV data
-    csv_data = "ID,Swap_ID,Reviewer,Rating,Comment\n"
-    
-    for feedback in feedback_list:
-        comment = feedback.comment.replace(',', ';') if feedback.comment else ''
-        csv_data += f"{feedback.id},{feedback.swap_id},{feedback.reviewer.name},{feedback.rating},{comment}\n"
-    
-    # In a real implementation, you would return this as a downloadable file
-    flash('Feedback report would be downloaded (CSV functionality not implemented).', 'info')
-    return redirect(url_for('admin.admin_dashboard'))
+    """Download comprehensive feedback logs report - ENHANCED FEATURE"""
+    try:
+        feedback_list = Feedback.query.all()
+        
+        # Create CSV in memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Enhanced header
+        writer.writerow([
+            'ID', 'Swap_ID', 'Reviewer_Name', 'Reviewer_Email', 'Rating', 'Comment',
+            'Created_Date', 'Swap_Requester', 'Swap_Receiver', 'Swap_Status'
+        ])
+        
+        # Write enhanced data
+        for feedback in feedback_list:
+            # Clean comment for CSV
+            comment = feedback.comment.replace('\n', ' ').replace('\r', ' ') if feedback.comment else ''
+            
+            writer.writerow([
+                feedback.id, feedback.swap_id,
+                feedback.reviewer.name, feedback.reviewer.email,
+                feedback.rating or 'N/A', comment,
+                feedback.created_at.strftime('%Y-%m-%d %H:%M') if hasattr(feedback, 'created_at') and feedback.created_at else '',
+                feedback.swap.requester.name if feedback.swap else 'N/A',
+                feedback.swap.receiver.name if feedback.swap else 'N/A',
+                feedback.swap.status if feedback.swap else 'N/A'
+            ])
+        
+        # Create file-like object for download
+        output.seek(0)
+        file_data = io.BytesIO()
+        file_data.write(output.getvalue().encode('utf-8'))
+        file_data.seek(0)
+        
+        return send_file(
+            file_data,
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'feedback_logs_report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        )
+        
+    except Exception as e:
+        flash(f'Error generating feedback report: {str(e)}', 'error')
+        return redirect(url_for('admin.admin_dashboard'))
