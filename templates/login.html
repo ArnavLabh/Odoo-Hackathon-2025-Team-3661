@@ -285,7 +285,7 @@
             <div class="auth-body">
                 <!-- Social Login Options -->
                 <div class="social-login">
-                    <a href="#" class="btn-social">
+                    <a href="{{ url_for('google_auth.google_login') }}" class="btn-social">
                         <i class="fab fa-google google"></i>
                         Continue with Google
                     </a>
@@ -401,14 +401,8 @@
             });
         });
         
-        // Social login handlers (placeholder)
-        document.querySelectorAll('.btn-social').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const provider = this.textContent.trim().split(' ')[2].toLowerCase();
-                window.SkillSwap.showNotification(`${provider} login coming soon!`, 'info');
-            });
-        });
+        // Social login handlers are now handled by the server-side routes
+        // No need to prevent default behavior for Google login
         
         // Auto-focus first input
         document.getElementById('email').focus();
