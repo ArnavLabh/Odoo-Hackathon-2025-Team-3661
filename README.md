@@ -7,8 +7,12 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-green.svg)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-Latest-red.svg)](https://flask.palletsprojects.com)
 [![SQLite](https://img.shields.io/badge/Database-SQLite-lightblue.svg)](https://sqlite.org)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-black.svg)](https://vercel.com)
 
 </div>
+
+## 🚀 Live Demo
+> **[View Live App](https://skill-swap-five-mu.vercel.app/)**
 
 ## 🎬 Demo Video
 > **Coming Soon!** Watch our platform in action - from user registration to successful skill swaps.

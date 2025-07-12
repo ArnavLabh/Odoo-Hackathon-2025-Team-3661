@@ -2,12 +2,19 @@ from dotenv import load_dotenv
 import os
 from datetime import timedelta
 
-load_dotenv()
+# Only load .env file in development
+if os.getenv("VERCEL_ENV") != "production":
+    load_dotenv()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL") or "sqlite:///skillswap.db"
+    # Use PostgreSQL for production, SQLite for development
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL or "sqlite:///skillswap.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
+    SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-change-in-production")
     
     # JWT Configuration
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.getenv("SECRET_KEY", "jwt-fallback-secret"))
