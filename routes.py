@@ -131,7 +131,12 @@ def login():
                 # Login the user
                 tokens = login_user(user)
                 flash(f'Welcome back, {user.name}!', 'success')
-                return redirect(url_for('main.dashboard'))
+                
+                # Redirect admins to admin dashboard
+                if user.is_admin:
+                    return redirect(url_for('admin.admin_dashboard'))
+                else:
+                    return redirect(url_for('main.dashboard'))
             else:
                 flash('Invalid email or password.', 'error')
         else:
@@ -210,9 +215,11 @@ def public_profile(user_id):
         avg_rating = 0
         
         can_request_swap = is_logged_in() and get_current_user().id != user_id
+        current_user = get_current_user() if is_logged_in() else None
         
         return render_template('public_profile.html', 
                              user=user, 
+                             current_user=current_user,
                              offered_skills=offered_skills, 
                              wanted_skills=wanted_skills,
                              can_request_swap=can_request_swap,
@@ -300,7 +307,11 @@ def swap_request_form(to_user_id):
         return redirect(url_for('main.login'))
     
     current_user = get_current_user()
-    to_user = User.query.get_or_404(to_user_id)
+    to_user = User.query.get(to_user_id)
+    
+    if not to_user:
+        flash('User not found.', 'error')
+        return redirect(url_for('main.browse'))
     
     if current_user.id == to_user_id:
         flash('You cannot request a swap with yourself.', 'error')
@@ -311,7 +322,9 @@ def swap_request_form(to_user_id):
     to_user_offered = UserSkill.query.filter_by(user_id=to_user_id, type='offered').all()
     
     return render_template('swap_request.html', 
-                         to_user=to_user, 
+                         user=to_user,
+                         to_user=to_user,
+                         current_user=current_user,
                          current_user_offered=current_user_offered,
                          to_user_offered=to_user_offered)
 
