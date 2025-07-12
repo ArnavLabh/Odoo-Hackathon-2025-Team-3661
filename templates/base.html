@@ -35,20 +35,6 @@
     {% block additional_css %}{% endblock %}
 </head>
 <body>
-    <!-- Theme Toggle -->
-    <div class="theme-toggle" title="Toggle Theme">
-        <i class="fas fa-moon"></i>
-    </div>
-    
-    <!-- Language Selector -->
-    <div class="language-selector">
-        <select id="languageSelect" title="Select Language">
-            <option value="en">🌐 EN</option>
-            <option value="hi">🇮🇳 हिन्दी</option>
-            <option value="gu">🇬🇺 ગુજરાતી</option>
-        </select>
-    </div>
-    
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
@@ -86,13 +72,33 @@
                 
                 <!-- User Menu -->
                 <ul class="navbar-nav">
+                    <!-- Language Selector -->
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe me-1"></i>
+                            <span class="d-none d-md-inline">Language</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end glass-container">
+                            <li><a class="dropdown-item language-option" href="#" data-lang="en">🌐 English</a></li>
+                            <li><a class="dropdown-item language-option" href="#" data-lang="hi">🇮🇳 हिन्दी</a></li>
+                            <li><a class="dropdown-item language-option" href="#" data-lang="gu">🇬🇺 ગુજરાતી</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Theme Toggle -->
+                    <li class="nav-item me-2">
+                        <a class="nav-link theme-toggle" href="#" title="Toggle Theme">
+                            <i class="fas fa-moon"></i>
+                        </a>
+                    </li>
+                    
                     {% if session.user_id %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user me-1"></i>
                             My Account
                         </a>
-                        <ul class="dropdown-menu glass-container">
+                        <ul class="dropdown-menu dropdown-menu-end glass-container">
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('main.profile') }}">
                                     <i class="fas fa-user-circle me-2"></i>

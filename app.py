@@ -80,6 +80,52 @@ def create_app():
             # Check if we're using SQLite (local development)
             if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI'].lower():
                 db.create_all()
+
+                # --- DEMO USERS AND SKILLS ---
+                from models import User, Skill, UserSkill
+                if User.query.count() < 5:  # Only add if not already present
+                    demo_users = [
+                        {"name": "Alice Smith", "email": "alice@example.com", "skills": ["Python", "Flask", "Public Speaking"]},
+                        {"name": "Bob Johnson", "email": "bob@example.com", "skills": ["JavaScript", "React", "Cooking"]},
+                        {"name": "Charlie Lee", "email": "charlie@example.com", "skills": ["Java", "Spring Boot", "Photography"]},
+                        {"name": "Diana Patel", "email": "diana@example.com", "skills": ["C++", "Algorithms", "Creative Writing"]},
+                        {"name": "Ethan Brown", "email": "ethan@example.com", "skills": ["HTML", "CSS", "Project Management"]},
+                        {"name": "Fiona Green", "email": "fiona@example.com", "skills": ["Python", "Machine Learning", "Pandas"]},
+                        {"name": "George White", "email": "george@example.com", "skills": ["Go", "Docker", "Kubernetes"]},
+                        {"name": "Hannah Black", "email": "hannah@example.com", "skills": ["Ruby", "Rails", "PostgreSQL"]},
+                        {"name": "Ivan Grey", "email": "ivan@example.com", "skills": ["PHP", "Laravel", "MySQL"]},
+                        {"name": "Julia Blue", "email": "julia@example.com", "skills": ["Swift", "iOS", "Xcode"]},
+                        {"name": "Kevin Red", "email": "kevin@example.com", "skills": ["C#", ".NET", "Azure"]},
+                        {"name": "Lily Violet", "email": "lily@example.com", "skills": ["JavaScript", "Vue.js", "Firebase"]},
+                        {"name": "Mike Orange", "email": "mike@example.com", "skills": ["Python", "Django", "REST API"]},
+                        {"name": "Nina Yellow", "email": "nina@example.com", "skills": ["R", "Statistics", "Data Science"]},
+                        {"name": "Oscar Pink", "email": "oscar@example.com", "skills": ["Scala", "Akka", "Spark"]},
+                        {"name": "Priya Sharma", "email": "priya@example.com", "skills": ["Yoga", "Mindfulness", "HTML"]},
+                        {"name": "Rahul Mehta", "email": "rahul@example.com", "skills": ["Public Speaking", "Python", "Leadership"]},
+                        {"name": "Sara Lee", "email": "sara@example.com", "skills": ["Painting", "JavaScript", "React"]},
+                        {"name": "Tom Brown", "email": "tom@example.com", "skills": ["Gardening", "C++", "Algorithms"]},
+                        {"name": "Uma Kapoor", "email": "uma@example.com", "skills": ["Cooking", "Project Management", "CSS"]},
+                    ]
+                    # Create all unique skills
+                    all_skills = set(skill for user in demo_users for skill in user["skills"])
+                    skill_objs = {}
+                    for skill_name in all_skills:
+                        skill = Skill.query.filter_by(name=skill_name).first()
+                        if not skill:
+                            skill = Skill(name=skill_name)
+                            db.session.add(skill)
+                        skill_objs[skill_name] = skill
+                    db.session.commit()
+                    # Create users and assign skills
+                    for user in demo_users:
+                        u = User(name=user["name"], email=user["email"], password_hash=None)
+                        db.session.add(u)
+                        db.session.commit()  # Commit to get user.id
+                        for skill_name in user["skills"]:
+                            us = UserSkill(user_id=u.id, skill_id=skill_objs[skill_name].id, type="offered")
+                            db.session.add(us)
+                    db.session.commit()
+                # --- END DEMO USERS ---
             else:
                 # For production databases, we assume tables exist
                 # You should run migrations separately

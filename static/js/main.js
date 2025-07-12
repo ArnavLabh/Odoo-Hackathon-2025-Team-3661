@@ -652,18 +652,35 @@ function updateThemeIcon() {
 
 // Language Management
 function initializeLanguage() {
-    const languageSelect = document.querySelector('.language-selector select');
-    if (languageSelect) {
-        languageSelect.value = currentLang;
-        languageSelect.addEventListener('change', changeLanguage);
+    const languageOptions = document.querySelectorAll('.language-option');
+    if (languageOptions.length > 0) {
+        languageOptions.forEach(option => {
+            if (option.getAttribute('data-lang') === currentLang) {
+                option.classList.add('active');
+            }
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                changeLanguage(this.getAttribute('data-lang'));
+            });
+        });
     }
     
     updateLanguage();
 }
 
-function changeLanguage(event) {
-    currentLang = event.target.value;
+function changeLanguage(lang) {
+    currentLang = lang;
     localStorage.setItem('skillswap-language', currentLang);
+    
+    // Update active class
+    document.querySelectorAll('.language-option').forEach(option => {
+        if (option.getAttribute('data-lang') === currentLang) {
+            option.classList.add('active');
+        } else {
+            option.classList.remove('active');
+        }
+    });
+    
     updateLanguage();
 }
 
@@ -936,6 +953,40 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Enhanced dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    // Add animation and styling to dropdowns
+    const dropdowns = document.querySelectorAll('.dropdown-menu');
+    
+    dropdowns.forEach(dropdown => {
+        dropdown.addEventListener('show.bs.dropdown', function() {
+            this.classList.add('animate__animated', 'animate__fadeIn');
+            this.style.animationDuration = '0.3s';
+        });
+    });
+    
+    // Make select elements more interactive
+    const selects = document.querySelectorAll('select.form-control, .filter-select');
+    
+    selects.forEach(select => {
+        select.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        select.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+        });
+        
+        // Add a subtle animation when changing options
+        select.addEventListener('change', function() {
+            this.classList.add('pulse');
+            setTimeout(() => {
+                this.classList.remove('pulse');
+            }, 500);
+        });
+    });
+});
 
 // Utility Functions
 function showNotification(message, type = 'info') {

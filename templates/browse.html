@@ -55,8 +55,7 @@
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 2rem;
-        position: sticky;
-        top: 100px;
+        position: relative;
         z-index: 100;
     }
     
@@ -721,75 +720,77 @@
         
         <!-- Search and Filters -->
         <div class="search-filters-section fade-in">
-            <div class="search-row">
-                <div class="search-input-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" 
-                           class="search-input" 
-                           id="searchInput" 
-                           placeholder="Search by name, skills, or location..."
-                           autocomplete="off">
+            <form action="{{ url_for('main.browse') }}" method="GET" id="searchForm">
+                <div class="search-row">
+                    <div class="search-input-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" 
+                               class="search-input" 
+                               id="searchInput" 
+                               name="search"
+                               value="{{ search_query }}"
+                               placeholder="Search by name, skills, or location..."
+                               autocomplete="off">
+                    </div>
+                    <button type="submit" class="search-btn" id="searchBtn">
+                        <i class="fas fa-search me-2"></i>
+                        Search
+                    </button>
                 </div>
-                <button class="search-btn" id="searchBtn">
-                    <i class="fas fa-search me-2"></i>
-                    Search
-                </button>
-            </div>
             
             <div class="filters-row">
                 <div class="filter-group">
                     <label class="filter-label">Skill Category</label>
-                    <select class="filter-select" id="skillFilter">
+                    <select class="filter-select" id="skillFilter" name="skill">
                         <option value="">All Skills</option>
-                        <option value="programming">Programming</option>
-                        <option value="design">Design</option>
-                        <option value="languages">Languages</option>
-                        <option value="music">Music</option>
-                        <option value="sports">Sports & Fitness</option>
-                        <option value="cooking">Cooking</option>
-                        <option value="photography">Photography</option>
-                        <option value="business">Business</option>
-                        <option value="crafts">Arts & Crafts</option>
+                        {% for skill in skills %}
+                        <option value="{{ skill.name }}" {% if skill_filter == skill.name %}selected{% endif %}>{{ skill.name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 
                 <div class="filter-group">
                     <label class="filter-label">Availability</label>
-                    <select class="filter-select" id="availabilityFilter">
+                    <select class="filter-select" id="availabilityFilter" name="availability">
                         <option value="">Any Time</option>
-                        <option value="weekends">Weekends</option>
-                        <option value="evenings">Evenings</option>
-                        <option value="weekdays">Weekdays</option>
-                        <option value="flexible">Flexible</option>
+                        {% for availability in availabilities %}
+                        <option value="{{ availability }}" {% if availability_filter == availability %}selected{% endif %}>{{ availability|title }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 
                 <div class="filter-group">
                     <label class="filter-label">Location</label>
-                    <select class="filter-select" id="locationFilter">
+                    <select class="filter-select" id="locationFilter" name="location">
                         <option value="">Any Location</option>
-                        <option value="online">Online Only</option>
-                        <option value="local">Local Area</option>
-                        <option value="remote">Remote Friendly</option>
+                        {% for location in locations %}
+                            {% if location %}
+                                <option value="{{ location }}" {% if location_filter == location %}selected{% endif %}>{{ location }}</option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
                 
                 <div class="filter-group">
                     <label class="filter-label">Sort By</label>
-                    <select class="filter-select" id="sortFilter">
-                        <option value="newest">Newest Members</option>
-                        <option value="rating">Highest Rated</option>
-                        <option value="active">Most Active</option>
-                        <option value="skills">Most Skills</option>
+                    <select class="filter-select" id="sortFilter" name="sort">
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest Members</option>
+                        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+                        <option value="active" {% if sort_by == 'active' %}selected{% endif %}>Most Active</option>
+                        <option value="skills" {% if sort_by == 'skills' %}selected{% endif %}>Most Skills</option>
                     </select>
                 </div>
             </div>
+            </form>
         </div>
         
         <!-- Results Info and View Toggle -->
         <div class="results-info fade-in">
             <div class="results-count" id="resultsCount">
-                Found <strong>0</strong> amazing people ready to swap skills
+                Found <strong>{{ users|length }}</strong> amazing people ready to swap skills
+                {% if total_users > users|length %}
+                    (showing page {{ current_page }} of {{ total_pages }})
+                {% endif %}
             </div>
             <div class="view-toggle">
                 <button class="view-btn active" id="gridViewBtn" title="Grid View">
@@ -803,15 +804,154 @@
         
         <!-- Users Container -->
         <div class="users-grid" id="usersContainer">
-            <!-- Users will be dynamically loaded here -->
+            {% if users %}
+                {% for user in users %}
+                    <div class="user-card glow-card visible">
+                        <div class="user-header">
+                            {% if user.photo_url %}
+                                <img src="{{ url_for('static', filename=user.photo_url) }}" alt="{{ user.name }}" class="user-avatar">
+                            {% else %}
+                                <div class="user-avatar-placeholder">{{ user.name[0] }}</div>
+                            {% endif %}
+                            <div class="user-info">
+                                <h3>{{ user.name }}</h3>
+                                <div class="user-meta">
+                                    {% if user.location %}
+                                    <div class="meta-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        {{ user.location }}
+                                    </div>
+                                    {% endif %}
+                                    {% if user.availability %}
+                                    <div class="meta-item">
+                                        <i class="fas fa-clock"></i>
+                                        {{ user.availability|title }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="meta-item">
+                                        {% if user.last_login and (now - user.last_login).total_seconds() < 3600 %}
+                                            <i class="fas fa-circle" style="color: #10b981; font-size: 0.6rem;"></i> Online
+                                        {% else %}
+                                            <i class="fas fa-circle" style="color: #6b7280; font-size: 0.6rem;"></i> Offline
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="user-skills">
+                            <div class="skills-title">
+                                <i class="fas fa-star"></i>
+                                Skills Offered
+                            </div>
+                            <div class="skill-tags">
+                                {% set offered_skills = user.get_offered_skills() %}
+                                {% for skill in offered_skills[:4] %}
+                                    <span class="skill-tag">{{ skill.name }}</span>
+                                {% endfor %}
+                                {% if offered_skills|length > 4 %}
+                                    <span class="skill-tag">+{{ offered_skills|length - 4 }} more</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="user-stats">
+                            <div class="stat-item">
+                                <span class="stat-number">{{ user.get_average_rating()|round(1) }}</span>
+                                <div class="stat-label">Rating</div>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ user.get_completed_swaps_count() }}</span>
+                                <div class="stat-label">Swaps</div>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">{{ user.get_offered_skills()|length }}</span>
+                                <div class="stat-label">Skills</div>
+                            </div>
+                        </div>
+                        
+                        <div class="user-actions">
+                            {% if current_user and current_user.id != user.id %}
+                                <a href="{{ url_for('main.swap_request_form', to_user_id=user.id) }}" class="btn-action btn-primary-action">
+                                    <i class="fas fa-handshake"></i>
+                                    Request Swap
+                                </a>
+                            {% endif %}
+                            <a href="{{ url_for('main.public_profile', user_id=user.id) }}" class="btn-action {% if not current_user or current_user.id == user.id %}btn-primary-action{% else %}btn-outline-action{% endif %}">
+                                <i class="fas fa-eye"></i>
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h3>No users found</h3>
+                    <p>Try adjusting your search criteria or filters to find more people.</p>
+                    <a href="{{ url_for('main.browse') }}" class="clear-filters-btn">
+                        Clear All Filters
+                    </a>
+                </div>
+            {% endif %}
         </div>
         
         <!-- Pagination -->
+        {% if total_pages > 1 %}
         <div class="pagination-wrapper">
             <div class="pagination" id="pagination">
-                <!-- Pagination buttons will be dynamically generated -->
+                <!-- Previous button -->
+                {% if current_page > 1 %}
+                    <a href="{{ url_for('main.browse', page=current_page-1, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% else %}
+                    <button class="page-btn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                {% endif %}
+                
+                <!-- First page -->
+                {% if current_page > 3 %}
+                    <a href="{{ url_for('main.browse', page=1, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">1</a>
+                    {% if current_page > 4 %}
+                        <span class="page-btn" style="border: none; background: transparent;">...</span>
+                    {% endif %}
+                {% endif %}
+                
+                <!-- Page numbers -->
+                {% set start_page = current_page - 2 if current_page > 2 else 1 %}
+                {% set end_page = current_page + 2 if current_page + 2 <= total_pages else total_pages %}
+                
+                {% for page_num in range(start_page, end_page + 1) %}
+                    {% if page_num == current_page %}
+                        <span class="page-btn active">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('main.browse', page=page_num, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">{{ page_num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                <!-- Last page -->
+                {% if current_page < total_pages - 2 %}
+                    {% if current_page < total_pages - 3 %}
+                        <span class="page-btn" style="border: none; background: transparent;">...</span>
+                    {% endif %}
+                    <a href="{{ url_for('main.browse', page=total_pages, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">{{ total_pages }}</a>
+                {% endif %}
+                
+                <!-- Next button -->
+                {% if current_page < total_pages %}
+                    <a href="{{ url_for('main.browse', page=current_page+1, search=search_query, skill=skill_filter, availability=availability_filter, location=location_filter, sort=sort_by) }}" class="page-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% else %}
+                    <button class="page-btn" disabled>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -820,6 +960,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // DOM Elements
+        const searchForm = document.getElementById('searchForm');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
         const skillFilter = document.getElementById('skillFilter');
@@ -827,536 +968,56 @@
         const locationFilter = document.getElementById('locationFilter');
         const sortFilter = document.getElementById('sortFilter');
         const usersContainer = document.getElementById('usersContainer');
-        const resultsCount = document.getElementById('resultsCount');
-        const pagination = document.getElementById('pagination');
         const gridViewBtn = document.getElementById('gridViewBtn');
         const listViewBtn = document.getElementById('listViewBtn');
         const loadingOverlay = document.getElementById('loadingOverlay');
         
-        // State management
-        let currentPage = 1;
-        let totalPages = 1;
-        let isGridView = true;
-        let currentFilters = {
-            search: '',
-            skill: '',
-            availability: '',
-            location: '',
-            sort: 'newest'
-        };
-        
-        // Sample user data (replace with actual API call)
-        const sampleUsers = [
-            {
-                id: 1,
-                name: "Alex Chen",
-                location: "San Francisco, CA",
-                avatar: null,
-                skills: ["JavaScript", "React", "Node.js", "Python"],
-                skillCategory: "programming",
-                availability: "evenings",
-                rating: 4.8,
-                completedSwaps: 12,
-                joinedDate: "2024-01-15",
-                isOnline: true
-            },
-            {
-                id: 2,
-                name: "Maria Garcia",
-                location: "Barcelona, Spain",
-                avatar: null,
-                skills: ["Graphic Design", "Photoshop", "Illustrator", "Figma"],
-                skillCategory: "design",
-                availability: "weekends",
-                rating: 4.9,
-                completedSwaps: 8,
-                joinedDate: "2024-02-01",
-                isOnline: false
-            },
-            {
-                id: 3,
-                name: "David Kim",
-                location: "Seoul, Korea",
-                avatar: null,
-                skills: ["Python", "Machine Learning", "Data Science", "AI"],
-                skillCategory: "programming",
-                availability: "flexible",
-                rating: 4.7,
-                completedSwaps: 15,
-                joinedDate: "2024-01-08",
-                isOnline: true
-            },
-            {
-                id: 4,
-                name: "Sophie Wilson",
-                location: "London, UK",
-                avatar: null,
-                skills: ["French", "Spanish", "Italian", "German"],
-                skillCategory: "languages",
-                availability: "weekdays",
-                rating: 5.0,
-                completedSwaps: 20,
-                joinedDate: "2023-12-20",
-                isOnline: true
-            },
-            {
-                id: 5,
-                name: "Carlos Rodriguez",
-                location: "Mexico City, Mexico",
-                avatar: null,
-                skills: ["Guitar", "Music Theory", "Songwriting", "Piano"],
-                skillCategory: "music",
-                availability: "evenings",
-                rating: 4.6,
-                completedSwaps: 6,
-                joinedDate: "2024-02-10",
-                isOnline: false
-            },
-            {
-                id: 6,
-                name: "Priya Patel",
-                location: "Mumbai, India",
-                avatar: null,
-                skills: ["Yoga", "Meditation", "Wellness", "Nutrition"],
-                skillCategory: "sports",
-                availability: "weekends",
-                rating: 4.9,
-                completedSwaps: 11,
-                joinedDate: "2024-01-25",
-                isOnline: true
-            },
-            {
-                id: 7,
-                name: "Emma Thompson",
-                location: "Toronto, Canada",
-                avatar: null,
-                skills: ["Photography", "Photo Editing", "Lightroom", "Camera"],
-                skillCategory: "photography",
-                availability: "flexible",
-                rating: 4.8,
-                completedSwaps: 9,
-                joinedDate: "2024-02-05",
-                isOnline: false
-            },
-            {
-                id: 8,
-                name: "Ahmed Hassan",
-                location: "Dubai, UAE",
-                avatar: null,
-                skills: ["Arabic", "English", "Business", "Marketing"],
-                skillCategory: "business",
-                availability: "weekdays",
-                rating: 4.7,
-                completedSwaps: 14,
-                joinedDate: "2024-01-12",
-                isOnline: true
-            },
-            {
-                id: 9,
-                name: "Lisa Anderson",
-                location: "Sydney, Australia",
-                avatar: null,
-                skills: ["Cooking", "Baking", "Pastry", "Nutrition"],
-                skillCategory: "cooking",
-                availability: "weekends",
-                rating: 4.9,
-                completedSwaps: 7,
-                joinedDate: "2024-02-15",
-                isOnline: true
-            },
-            {
-                id: 10,
-                name: "Jean-Pierre Dubois",
-                location: "Paris, France",
-                avatar: null,
-                skills: ["Painting", "Drawing", "Art History", "Sculpture"],
-                skillCategory: "crafts",
-                availability: "evenings",
-                rating: 4.8,
-                completedSwaps: 13,
-                joinedDate: "2024-01-30",
-                isOnline: false
-            },
-            {
-                id: 11,
-                name: "Yuki Tanaka",
-                location: "Tokyo, Japan",
-                avatar: null,
-                skills: ["Japanese", "Calligraphy", "Origami", "Tea Ceremony"],
-                skillCategory: "languages",
-                availability: "flexible",
-                rating: 5.0,
-                completedSwaps: 18,
-                joinedDate: "2023-12-15",
-                isOnline: true
-            },
-            {
-                id: 12,
-                name: "Roberto Silva",
-                location: "São Paulo, Brazil",
-                avatar: null,
-                skills: ["Portuguese", "Capoeira", "Dance", "Music"],
-                skillCategory: "sports",
-                availability: "evenings",
-                rating: 4.6,
-                completedSwaps: 5,
-                joinedDate: "2024-02-20",
-                isOnline: false
-            }
-        ];
-        
-        // Function to create user card HTML
-        function createUserCard(user, viewType = 'grid') {
-            const avatar = user.avatar 
-                ? `<img src="${user.avatar}" alt="${user.name}" class="user-avatar">`
-                : `<div class="user-avatar-placeholder">${user.name[0]}</div>`;
-            
-            const skillTags = user.skills.slice(0, 4).map(skill => 
-                `<span class="skill-tag">${skill}</span>`
-            ).join('');
-            
-            const moreSkills = user.skills.length > 4 ? `<span class="skill-tag">+${user.skills.length - 4} more</span>` : '';
-            
-            const onlineStatus = user.isOnline ? 
-                '<i class="fas fa-circle" style="color: #10b981; font-size: 0.6rem;"></i> Online' :
-                '<i class="fas fa-circle" style="color: #6b7280; font-size: 0.6rem;"></i> Offline';
-            
-            return `
-                <div class="user-card glow-card ${viewType === 'list' ? 'list-view' : ''}" data-user-id="${user.id}">
-                    <div class="user-header">
-                        ${avatar}
-                        <div class="user-info">
-                            <h3>${user.name}</h3>
-                            <div class="user-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    ${user.location}
-                                </div>
-                                <div class="meta-item">
-                                    <i class="fas fa-clock"></i>
-                                    ${user.availability.charAt(0).toUpperCase() + user.availability.slice(1)}
-                                </div>
-                                <div class="meta-item">
-                                    ${onlineStatus}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="user-skills">
-                        <div class="skills-title">
-                            <i class="fas fa-star"></i>
-                            Skills Offered
-                        </div>
-                        <div class="skill-tags">
-                            ${skillTags}
-                            ${moreSkills}
-                        </div>
-                    </div>
-                    
-                    <div class="user-stats">
-                        <div class="stat-item">
-                            <span class="stat-number">${user.rating}</span>
-                            <div class="stat-label">Rating</div>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number">${user.completedSwaps}</span>
-                            <div class="stat-label">Swaps</div>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number">${user.skills.length}</span>
-                            <div class="stat-label">Skills</div>
-                        </div>
-                    </div>
-                    
-                    <div class="user-actions">
-                        <button class="btn-action btn-primary-action" onclick="requestSwap(${user.id})">
-                            <i class="fas fa-handshake"></i>
-                            Request Swap
-                        </button>
-                        <button class="btn-action btn-outline-action" onclick="viewProfile(${user.id})">
-                            <i class="fas fa-eye"></i>
-                            View Profile
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Function to filter and sort users
-        function filterUsers() {
-            let filtered = [...sampleUsers];
-            
-            // Apply search filter
-            if (currentFilters.search) {
-                const searchTerm = currentFilters.search.toLowerCase();
-                filtered = filtered.filter(user => 
-                    user.name.toLowerCase().includes(searchTerm) ||
-                    user.location.toLowerCase().includes(searchTerm) ||
-                    user.skills.some(skill => skill.toLowerCase().includes(searchTerm))
-                );
-            }
-            
-            // Apply skill category filter
-            if (currentFilters.skill) {
-                filtered = filtered.filter(user => 
-                    user.skillCategory === currentFilters.skill
-                );
-            }
-            
-            // Apply availability filter
-            if (currentFilters.availability) {
-                filtered = filtered.filter(user => 
-                    user.availability === currentFilters.availability
-                );
-            }
-            
-            // Apply location filter
-            if (currentFilters.location) {
-                if (currentFilters.location === 'online') {
-                    filtered = filtered.filter(user => user.isOnline);
-                } else if (currentFilters.location === 'local') {
-                    // Simulate local filtering (you would implement actual geolocation logic)
-                    filtered = filtered.filter(user => user.location.includes('CA'));
-                }
-            }
-            
-            // Apply sorting
-            switch (currentFilters.sort) {
-                case 'rating':
-                    filtered.sort((a, b) => b.rating - a.rating);
-                    break;
-                case 'active':
-                    filtered.sort((a, b) => b.completedSwaps - a.completedSwaps);
-                    break;
-                case 'skills':
-                    filtered.sort((a, b) => b.skills.length - a.skills.length);
-                    break;
-                case 'newest':
-                default:
-                    filtered.sort((a, b) => new Date(b.joinedDate) - new Date(a.joinedDate));
-                    break;
-            }
-            
-            return filtered;
-        }
-        
-        // Function to display users with pagination
-        function displayUsers(page = 1) {
-            showLoading();
-            
-            setTimeout(() => {
-                const filteredUsers = filterUsers();
-                const usersPerPage = 10;
-                const startIndex = (page - 1) * usersPerPage;
-                const endIndex = startIndex + usersPerPage;
-                const usersToShow = filteredUsers.slice(startIndex, endIndex);
-                
-                // Update results count
-                resultsCount.innerHTML = `Found <strong>${filteredUsers.length}</strong> amazing people ready to swap skills`;
-                
-                // Clear container
-                usersContainer.innerHTML = '';
-                
-                if (usersToShow.length === 0) {
-                    usersContainer.innerHTML = `
-                        <div class="no-results">
-                            <i class="fas fa-search"></i>
-                            <h3>No users found</h3>
-                            <p>Try adjusting your search criteria or filters to find more people.</p>
-                            <button class="clear-filters-btn" onclick="clearAllFilters()">
-                                Clear All Filters
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    // Update container class based on view type
-                    usersContainer.className = isGridView ? 'users-grid' : 'users-list';
-                    
-                    // Add users with staggered animation
-                    usersToShow.forEach((user, index) => {
-                        setTimeout(() => {
-                            const userElement = document.createElement('div');
-                            userElement.innerHTML = createUserCard(user, isGridView ? 'grid' : 'list');
-                            const userCard = userElement.firstElementChild;
-                            
-                            usersContainer.appendChild(userCard);
-                            
-                            // Trigger animation
-                            setTimeout(() => {
-                                userCard.classList.add('visible');
-                            }, 50);
-                        }, index * 100);
-                    });
-                }
-                
-                // Update pagination
-                totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-                currentPage = page;
-                updatePagination();
-                
-                hideLoading();
-            }, 500);
-        }
-        
-        // Function to update pagination
-        function updatePagination() {
-            pagination.innerHTML = '';
-            
-            if (totalPages <= 1) return;
-            
-            // Previous button
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'page-btn';
-            prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => changePage(currentPage - 1);
-            pagination.appendChild(prevBtn);
-            
-            // Page numbers
-            const startPage = Math.max(1, currentPage - 2);
-            const endPage = Math.min(totalPages, currentPage + 2);
-            
-            if (startPage > 1) {
-                const firstBtn = createPageButton(1);
-                pagination.appendChild(firstBtn);
-                
-                if (startPage > 2) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    ellipsis.className = 'page-btn';
-                    ellipsis.style.border = 'none';
-                    ellipsis.style.background = 'transparent';
-                    pagination.appendChild(ellipsis);
-                }
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
-                const pageBtn = createPageButton(i);
-                pagination.appendChild(pageBtn);
-            }
-            
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    ellipsis.className = 'page-btn';
-                    ellipsis.style.border = 'none';
-                    ellipsis.style.background = 'transparent';
-                    pagination.appendChild(ellipsis);
-                }
-                
-                const lastBtn = createPageButton(totalPages);
-                pagination.appendChild(lastBtn);
-            }
-            
-            // Next button
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'page-btn';
-            nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => changePage(currentPage + 1);
-            pagination.appendChild(nextBtn);
-        }
-        
-        // Function to create page button
-        function createPageButton(pageNum) {
-            const btn = document.createElement('button');
-            btn.className = `page-btn ${pageNum === currentPage ? 'active' : ''}`;
-            btn.textContent = pageNum;
-            btn.onclick = () => changePage(pageNum);
-            return btn;
-        }
-        
-        // Function to change page
-        function changePage(page) {
-            if (page < 1 || page > totalPages || page === currentPage) return;
-            
-            // Smooth scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            setTimeout(() => {
-                displayUsers(page);
-            }, 300);
-        }
-        
-        // Function to show loading
-        function showLoading() {
-            loadingOverlay.style.display = 'flex';
-        }
-        
-        // Function to hide loading
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
-        }
-        
-        // Function to update filters and refresh results
-        function updateFilters() {
-            currentFilters.search = searchInput.value.trim();
-            currentFilters.skill = skillFilter.value;
-            currentFilters.availability = availabilityFilter.value;
-            currentFilters.location = locationFilter.value;
-            currentFilters.sort = sortFilter.value;
-            
-            displayUsers(1);
-        }
-        
-        // Event listeners
-        searchInput.addEventListener('input', window.SkillSwap.debounce(updateFilters, 300));
-        searchBtn.addEventListener('click', updateFilters);
-        skillFilter.addEventListener('change', updateFilters);
-        availabilityFilter.addEventListener('change', updateFilters);
-        locationFilter.addEventListener('change', updateFilters);
-        sortFilter.addEventListener('change', updateFilters);
-        
         // View toggle event listeners
         gridViewBtn.addEventListener('click', function() {
-            if (!isGridView) {
-                isGridView = true;
-                this.classList.add('active');
-                listViewBtn.classList.remove('active');
-                displayUsers(currentPage);
-            }
+            usersContainer.className = 'users-grid';
+            this.classList.add('active');
+            listViewBtn.classList.remove('active');
+            
+            // Save preference
+            localStorage.setItem('skillswap-view-preference', 'grid');
         });
         
         listViewBtn.addEventListener('click', function() {
-            if (isGridView) {
-                isGridView = false;
-                this.classList.add('active');
-                gridViewBtn.classList.remove('active');
-                displayUsers(currentPage);
-            }
+            usersContainer.className = 'users-list';
+            this.classList.add('active');
+            gridViewBtn.classList.remove('active');
+            
+            // Save preference
+            localStorage.setItem('skillswap-view-preference', 'list');
         });
         
-        // Global functions for user interactions
-        window.requestSwap = function(userId) {
-            const button = event.target;
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<span class="loading"></span> Requesting...';
-            button.disabled = true;
-            
-            setTimeout(() => {
-                window.location.href = `/swap_request/${userId}`;
-            }, 1000);
-        };
+        // Load view preference
+        const viewPreference = localStorage.getItem('skillswap-view-preference');
+        if (viewPreference === 'list') {
+            listViewBtn.click();
+        }
         
-        window.viewProfile = function(userId) {
-            const card = event.target.closest('.user-card');
-            card.style.opacity = '0.7';
-            
-            setTimeout(() => {
-                window.location.href = `/public_profile/${userId}`;
-            }, 200);
-        };
+        // Auto-submit form on filter change
+        skillFilter.addEventListener('change', function() {
+            searchForm.submit();
+        });
         
-        window.clearAllFilters = function() {
-            searchInput.value = '';
-            skillFilter.value = '';
-            availabilityFilter.value = '';
-            locationFilter.value = '';
-            sortFilter.value = 'newest';
-            updateFilters();
-        };
+        availabilityFilter.addEventListener('change', function() {
+            searchForm.submit();
+        });
+        
+        locationFilter.addEventListener('change', function() {
+            searchForm.submit();
+        });
+        
+        sortFilter.addEventListener('change', function() {
+            searchForm.submit();
+        });
+        
+        // Show loading overlay when form is submitted
+        searchForm.addEventListener('submit', function() {
+            loadingOverlay.style.display = 'flex';
+        });
         
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
@@ -1369,23 +1030,24 @@
             // Escape to clear search
             if (e.key === 'Escape' && document.activeElement === searchInput) {
                 searchInput.value = '';
-                updateFilters();
-            }
-            
-            // Arrow keys for pagination
-            if (e.key === 'ArrowLeft' && currentPage > 1) {
-                changePage(currentPage - 1);
-            }
-            if (e.key === 'ArrowRight' && currentPage < totalPages) {
-                changePage(currentPage + 1);
+                searchForm.submit();
             }
         });
         
-        // Initialize
-        displayUsers(1);
-        
         // Auto-focus search input
         searchInput.focus();
+        
+        // Add animation to user cards
+        document.querySelectorAll('.user-card').forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('visible');
+            }, index * 100);
+        });
     });
+    
+    // Global function to clear all filters
+    window.clearAllFilters = function() {
+        window.location.href = "{{ url_for('main.browse') }}";
+    };
 </script>
 {% endblock %}

@@ -125,15 +125,6 @@ body::before {
 
 /* Theme Toggle */
 .theme-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1001;
-    background: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-color);
-    border-radius: 50px;
-    padding: 0.5rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -147,29 +138,16 @@ body::before {
     color: var(--primary-color);
 }
 
-/* Language Selector */
-.language-selector {
-    position: fixed;
-    top: 20px;
-    right: 80px;
-    z-index: 1001;
-}
-
-.language-selector select {
-    background: var(--bg-glass);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 0.5rem;
-    color: var(--text-primary);
-    font-size: 0.9rem;
+/* Language Dropdown */
+.language-option {
     cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
 }
 
-.language-selector select:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+.language-option:hover {
+    background-color: var(--bg-secondary);
 }
 
 /* Hero Section */
@@ -335,6 +313,59 @@ body::before {
 
 .form-control::placeholder {
     color: var(--text-secondary);
+}
+
+/* Enhanced Dropdowns */
+select.form-control, .filter-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234f46e5' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem;
+}
+
+.dropdown-menu {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    box-shadow: var(--shadow-light);
+    padding: 0.75rem 0;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-secondary);
+    transform: translateX(5px);
+}
+
+.dropdown-item.active {
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.1), transparent);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.dropdown-item i {
+    margin-right: 0.75rem;
+    width: 20px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.dropdown-divider {
+    border-color: var(--border-color);
+    margin: 0.5rem 0;
 }
 
 /* Cards */

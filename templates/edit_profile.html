@@ -1,0 +1,743 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Skill Swap{% endblock %}
+
+{% block additional_css %}
+<style>
+    .edit-profile-container {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+    
+    .edit-profile-header {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .edit-profile-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+    
+    .edit-profile-title {
+        font-size: 2rem;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+    
+    .edit-profile-subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 0;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+    
+    @media (max-width: 992px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .section-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+    
+    .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-heavy);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+        margin-right: 0.75rem;
+    }
+    
+    .profile-avatar-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--primary-color);
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-light);
+    }
+    
+    .profile-avatar-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: var(--gradient-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-light);
+    }
+    
+    .avatar-upload-btn {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        padding: 0.5rem 1.5rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .avatar-upload-btn:hover {
+        background: var(--bg-secondary);
+        transform: translateY(-2px);
+    }
+    
+    .avatar-upload-btn i {
+        margin-right: 0.5rem;
+    }
+    
+    .profile-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: var(--bg-secondary);
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        transform: translateX(5px);
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(79, 70, 229, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+    }
+    
+    .stat-icon i {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+    }
+    
+    .stat-content span {
+        display: block;
+    }
+    
+    .stat-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .form-section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .form-hint {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: var(--bg-secondary);
+        transition: .4s;
+        border-radius: 34px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    input:checked + .toggle-slider {
+        background: var(--gradient-primary);
+    }
+    
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+    
+    .toggle-label {
+        display: flex;
+        align-items: center;
+    }
+    
+    .toggle-label span {
+        margin-left: 1rem;
+        font-weight: 500;
+    }
+    
+    .skills-container {
+        margin-top: 1.5rem;
+    }
+    
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .skill-card {
+        background: var(--bg-secondary);
+        border-radius: 15px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .skill-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-light);
+    }
+    
+    .skill-info h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .skill-type {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .skill-offered {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-color);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .skill-wanted {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+    
+    .skill-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .skill-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .skill-edit-btn {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .skill-delete-btn {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    .skill-btn:hover {
+        transform: scale(1.1);
+    }
+    
+    .add-skill-form {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .add-skill-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+    
+    .add-skill-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+    
+    @media (max-width: 768px) {
+        .add-skill-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <div class="container">
+        <div class="edit-profile-header">
+            <h1 class="edit-profile-title">Edit Your Profile</h1>
+            <p class="edit-profile-subtitle">Update your personal information and manage your skills</p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="sidebar">
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-circle"></i>
+                        Profile
+                    </h2>
+                    
+                    <div class="profile-avatar-container">
+                        {% if user.photo_url %}
+                        <img src="{{ user.photo_url }}" alt="{{ user.name }}" class="profile-avatar">
+                        {% else %}
+                        <div class="profile-avatar-placeholder">
+                            {{ user.name[0] | upper }}
+                        </div>
+                        {% endif %}
+                        
+                        <label for="avatar-upload" class="avatar-upload-btn">
+                            <i class="fas fa-camera"></i>
+                            Change Photo
+                        </label>
+                        <input type="file" id="avatar-upload" style="display: none;">
+                    </div>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-number">{{ "%.1f"|format(user.get_average_rating()) }}</span>
+                                <span class="stat-label">Average Rating</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-number">{{ user.get_completed_swaps_count() }}</span>
+                                <span class="stat-label">Completed Swaps</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-number">{{ user.created_at.strftime('%b %d, %Y') }}</span>
+                                <span class="stat-label">Member Since</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-shield-alt"></i>
+                        Privacy
+                    </h2>
+                    
+                    <form action="{{ url_for('main.update_privacy') }}" method="post">
+                        <div class="form-group">
+                            <label class="toggle-label">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" name="is_public" {% if user.is_public %}checked{% endif %}>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span>Public Profile</span>
+                            </label>
+                            <p class="form-hint">When enabled, your profile will be visible to all users.</p>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-2"></i>
+                            Save Privacy Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="main-content">
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-edit"></i>
+                        Personal Information
+                    </h2>
+                    
+                    <form action="{{ url_for('main.update_profile') }}" method="post">
+                        <div class="form-section">
+                            <h3 class="form-section-title">Basic Details</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Full Name</label>
+                                    <input type="text" id="name" name="name" class="form-control" value="{{ user.name }}" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" id="location" name="location" class="form-control" value="{{ user.location or '' }}" placeholder="City, Country">
+                                    <p class="form-hint">Help others find you by sharing your location</p>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="availability" class="form-label">Availability</label>
+                                    <select id="availability" name="availability" class="form-control">
+                                        <option value="">Select your availability</option>
+                                        <option value="Weekdays" {% if user.availability == 'Weekdays' %}selected{% endif %}>Weekdays</option>
+                                        <option value="Weekends" {% if user.availability == 'Weekends' %}selected{% endif %}>Weekends</option>
+                                        <option value="Evenings" {% if user.availability == 'Evenings' %}selected{% endif %}>Evenings</option>
+                                        <option value="Flexible" {% if user.availability == 'Flexible' %}selected{% endif %}>Flexible</option>
+                                    </select>
+                                    <p class="form-hint">When are you typically available for skill swaps?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3 class="form-section-title">Password</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="current_password" class="form-label">Current Password</label>
+                                    <input type="password" id="current_password" name="current_password" class="form-control" placeholder="Enter your current password">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="new_password" class="form-label">New Password</label>
+                                    <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Enter a new password">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm_password" class="form-label">Confirm New Password</label>
+                                <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm your new password">
+                                <p class="form-hint">Leave password fields empty if you don't want to change it</p>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Save Changes
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="section-card">
+                    <h2 class="section-title">
+                        <i class="fas fa-lightbulb"></i>
+                        Manage Skills
+                    </h2>
+                    
+                    <div class="skills-container">
+                        <h3 class="form-section-title">Skills You Offer</h3>
+                        
+                        <div class="skills-grid">
+                            {% for skill in user.get_offered_skills() %}
+                            <div class="skill-card">
+                                <div class="skill-info">
+                                    <h4>{{ skill.name }}</h4>
+                                    <span class="skill-type skill-offered">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Offering
+                                    </span>
+                                </div>
+                                <div class="skill-actions">
+                                    <button class="skill-btn skill-edit-btn" title="Edit skill">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <button class="skill-btn skill-delete-btn" title="Remove skill">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <h3 class="form-section-title">Skills You Want to Learn</h3>
+                        
+                        <div class="skills-grid">
+                            {% for skill in user.get_wanted_skills() %}
+                            <div class="skill-card">
+                                <div class="skill-info">
+                                    <h4>{{ skill.name }}</h4>
+                                    <span class="skill-type skill-wanted">
+                                        <i class="fas fa-graduation-cap me-1"></i>
+                                        Learning
+                                    </span>
+                                </div>
+                                <div class="skill-actions">
+                                    <button class="skill-btn skill-edit-btn" title="Edit skill">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <button class="skill-btn skill-delete-btn" title="Remove skill">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="add-skill-form">
+                            <h4 class="add-skill-title">Add New Skill</h4>
+                            
+                            <form action="{{ url_for('main.add_skill') }}" method="post">
+                                <div class="add-skill-row">
+                                    <div class="form-group">
+                                        <label for="skill_name" class="form-label">Skill Name</label>
+                                        <input type="text" id="skill_name" name="skill_name" class="form-control" placeholder="Enter skill name" list="skill-suggestions" required>
+                                        <datalist id="skill-suggestions">
+                                            {% for skill in all_skills %}
+                                            <option value="{{ skill.name }}">
+                                            {% endfor %}
+                                        </datalist>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="skill_type" class="form-label">Skill Type</label>
+                                        <select id="skill_type" name="skill_type" class="form-control" required>
+                                            <option value="">Select type</option>
+                                            <option value="offered">I can teach this</option>
+                                            <option value="wanted">I want to learn this</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-plus me-2"></i>
+                                            Add Skill
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle avatar upload
+        const avatarUpload = document.getElementById('avatar-upload');
+        const avatarContainer = document.querySelector('.profile-avatar-container');
+        
+        if (avatarUpload) {
+            avatarUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        // Create preview
+                        let avatar = avatarContainer.querySelector('.profile-avatar');
+                        const placeholder = avatarContainer.querySelector('.profile-avatar-placeholder');
+                        
+                        if (placeholder) {
+                            placeholder.style.display = 'none';
+                        }
+                        
+                        if (!avatar) {
+                            avatar = document.createElement('img');
+                            avatar.className = 'profile-avatar';
+                            avatarContainer.insertBefore(avatar, avatarContainer.firstChild);
+                        }
+                        
+                        avatar.src = event.target.result;
+                        
+                        // Upload file (this would be implemented with AJAX in a real application)
+                        // For demo purposes, we'll just show a success message
+                        setTimeout(() => {
+                            const alert = document.createElement('div');
+                            alert.className = 'alert alert-success mt-3';
+                            alert.innerHTML = '<i class="fas fa-check-circle me-2"></i> Photo uploaded successfully!';
+                            avatarContainer.appendChild(alert);
+                            
+                            setTimeout(() => {
+                                alert.remove();
+                            }, 3000);
+                        }, 1000);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        // Password confirmation validation
+        const newPassword = document.getElementById('new_password');
+        const confirmPassword = document.getElementById('confirm_password');
+        
+        if (newPassword && confirmPassword) {
+            confirmPassword.addEventListener('input', function() {
+                if (newPassword.value !== confirmPassword.value) {
+                    confirmPassword.setCustomValidity("Passwords don't match");
+                } else {
+                    confirmPassword.setCustomValidity('');
+                }
+            });
+            
+            newPassword.addEventListener('input', function() {
+                if (confirmPassword.value) {
+                    if (newPassword.value !== confirmPassword.value) {
+                        confirmPassword.setCustomValidity("Passwords don't match");
+                    } else {
+                        confirmPassword.setCustomValidity('');
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
