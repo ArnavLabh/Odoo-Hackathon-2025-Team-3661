@@ -65,6 +65,12 @@
                             <span data-translate="dashboard">Dashboard</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('swaps.swap_list') }}">
+                            <i class="fas fa-exchange-alt me-1"></i>
+                            <span data-translate="my-swaps">My Swaps</span>
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
                 
@@ -107,6 +113,12 @@
                                 <a class="dropdown-item" href="{{ url_for('main.manage_skills') }}">
                                     <i class="fas fa-cogs me-2"></i>
                                     <span data-translate="manage-skills">Manage Skills</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('swaps.swap_list') }}">
+                                    <i class="fas fa-exchange-alt me-2"></i>
+                                    <span data-translate="my-swaps">My Swaps</span>
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
