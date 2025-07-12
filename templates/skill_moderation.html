@@ -1,0 +1,651 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Skill Management - Admin Dashboard{% endblock %}
+{% block page_title %}Skill Management{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-primary">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <h3 class="mb-1">{{ skills|length }}</h3>
+            <p class="text-muted mb-0">Total Skills</p>
+            <small class="text-info">
+                <i class="fas fa-plus-circle"></i> Add new skill
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-success">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3 class="mb-1">{{ skill_usage.values()|sum }}</h3>
+            <p class="text-muted mb-0">Total Usage</p>
+            <small class="text-success">
+                User-skill associations
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="mb-1">{{ skills|selectattr('name', 'length', '<=', 3)|list|length }}</h3>
+            <p class="text-muted mb-0">Short Names</p>
+            <small class="text-warning">
+                May need review
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-danger">
+                <i class="fas fa-ban"></i>
+            </div>
+            <h3 class="mb-1">{{ skills|selectattr('name', 'lower')|select('match', '.*test.*|.*fake.*')|list|length }}</h3>
+            <p class="text-muted mb-0">Suspicious</p>
+            <small class="text-danger">
+                Flagged for review
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Filter and Search -->
+<div class="filter-section">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Search Skills</label>
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="skillSearch" 
+                       placeholder="Search by skill name..." onkeyup="filterSkills()">
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Usage Filter</label>
+            <select class="form-select" id="usageFilter" onchange="filterSkills()">
+                <option value="all">All Skills</option>
+                <option value="popular">Popular (10+ users)</option>
+                <option value="moderate">Moderate (3-9 users)</option>
+                <option value="low">Low Usage (1-2 users)</option>
+                <option value="unused">Unused (0 users)</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Sort By</label>
+            <select class="form-select" id="sortBy" onchange="sortSkills()">
+                <option value="name_asc">Name A-Z</option>
+                <option value="name_desc">Name Z-A</option>
+                <option value="usage_desc">Most Used</option>
+                <option value="usage_asc">Least Used</option>
+            </select>
+        </div>
+        
+        <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <button class="btn btn-success" onclick="showAddSkillModal()">
+                    <i class="fas fa-plus me-1"></i>Add Skill
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skills Table -->
+<div class="data-table">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h5 class="mb-0">
+            <i class="fas fa-cogs me-2"></i>
+            Skills Management
+        </h5>
+        
+        <div class="btn-group">
+            <button class="btn btn-outline-info" onclick="exportSkills()">
+                <i class="fas fa-download me-1"></i>Export
+            </button>
+            <div class="btn-group">
+                <button class="btn btn-outline-danger dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-cog me-1"></i>Bulk Actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('merge')">
+                        <i class="fas fa-compress me-2"></i>Merge Selected
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('category')">
+                        <i class="fas fa-tags me-2"></i>Assign Category
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="bulkAction('delete')">
+                        <i class="fas fa-trash me-2"></i>Delete Selected
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table" id="skillsTable">
+            <thead>
+                <tr>
+                    <th width="50">
+                        <input type="checkbox" id="selectAll" onchange="toggleAllSkills()">
+                    </th>
+                    <th>Skill Name</th>
+                    <th>Category</th>
+                    <th>Usage Count</th>
+                    <th>Popularity</th>
+                    <th>Status</th>
+                    <th>Last Used</th>
+                    <th width="200">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for skill in skills %}
+                <tr class="skill-row" data-skill-id="{{ skill.id }}">
+                    <td>
+                        <input type="checkbox" class="skill-checkbox" value="{{ skill.id }}">
+                    </td>
+                    <td>
+                        <div class="skill-info">
+                            <strong>{{ skill.name }}</strong>
+                            <div class="skill-badges mt-1">
+                                {% if skill.name|length <= 3 %}
+                                    <span class="badge bg-warning">Short Name</span>
+                                {% endif %}
+                                {% if 'test' in skill.name.lower() or 'fake' in skill.name.lower() %}
+                                    <span class="badge bg-danger">Suspicious</span>
+                                {% endif %}
+                                {% if skill_usage[skill.id] >= 20 %}
+                                    <span class="badge bg-success">Popular</span>
+                                {% elif skill_usage[skill.id] == 0 %}
+                                    <span class="badge bg-secondary">Unused</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="skill-category">
+                            {% if 'python' in skill.name.lower() or 'java' in skill.name.lower() or 'javascript' in skill.name.lower() %}
+                                <span class="badge bg-primary">Programming</span>
+                            {% elif 'design' in skill.name.lower() or 'photo' in skill.name.lower() %}
+                                <span class="badge bg-info">Design</span>
+                            {% elif 'cook' in skill.name.lower() or 'yoga' in skill.name.lower() %}
+                                <span class="badge bg-success">Lifestyle</span>
+                            {% else %}
+                                <span class="badge bg-secondary">General</span>
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="usage-info">
+                            <strong>{{ skill_usage[skill.id] }}</strong> users
+                            {% if skill_usage[skill.id] > 0 %}
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    Active usage
+                                </small>
+                            {% else %}
+                                <br>
+                                <small class="text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    No usage
+                                </small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="popularity-bar">
+                            {% set max_usage = skill_usage.values()|max %}
+                            {% set usage_percent = (skill_usage[skill.id] / max_usage * 100) if max_usage > 0 else 0 %}
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar 
+                                    {% if usage_percent >= 80 %}bg-success
+                                    {% elif usage_percent >= 50 %}bg-warning
+                                    {% elif usage_percent >= 20 %}bg-info
+                                    {% else %}bg-secondary
+                                    {% endif %}" 
+                                    style="width: {{ usage_percent }}%;">
+                                    {{ "%.0f"|format(usage_percent) }}%
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if skill_usage[skill.id] > 0 %}
+                            <span class="status-badge status-active">
+                                <i class="fas fa-check me-1"></i>Active
+                            </span>
+                        {% else %}
+                            <span class="status-badge bg-warning text-dark">
+                                <i class="fas fa-pause me-1"></i>Inactive
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <small class="text-muted">
+                            {% if skill_usage[skill.id] > 0 %}
+                                Recently
+                            {% else %}
+                                Never used
+                            {% endif %}
+                        </small>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <!-- Edit Skill -->
+                            <button class="action-btn btn-outline-primary" title="Edit Skill"
+                                    onclick="editSkill({{ skill.id }}, '{{ skill.name|replace(\"'\", \"\\'\") }}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            
+                            <!-- View Usage -->
+                            <button class="action-btn btn-outline-info" title="View Usage Details"
+                                    onclick="viewSkillUsage({{ skill.id }})">
+                                <i class="fas fa-users"></i>
+                            </button>
+                            
+                            <!-- Merge Skills -->
+                            <button class="action-btn btn-outline-warning" title="Merge with Another Skill"
+                                    onclick="showMergeModal({{ skill.id }}, '{{ skill.name|replace(\"'\", \"\\'\") }}')">
+                                <i class="fas fa-compress"></i>
+                            </button>
+                            
+                            {% if skill_usage[skill.id] == 0 %}
+                                <!-- Delete Unused Skill -->
+                                <a href="{{ url_for('admin.delete_skill', skill_id=skill.id) }}" 
+                                   class="action-btn btn-outline-danger" title="Delete Unused Skill"
+                                   onclick="return confirm('Delete skill \'{{ skill.name|replace(\"'\", \"\\'\") }}\'? This action cannot be undone.')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            {% else %}
+                                <!-- Archive Skill -->
+                                <button class="action-btn btn-outline-secondary" title="Archive Skill"
+                                        onclick="archiveSkill({{ skill.id }})">
+                                    <i class="fas fa-archive"></i>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Skill Modal -->
+<div class="modal fade" id="skillModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="skillModalTitle">
+                    <i class="fas fa-plus me-2"></i>
+                    Add New Skill
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="skillForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Skill Name</label>
+                        <input type="text" class="form-control" id="skillName" name="skill_name" 
+                               placeholder="Enter skill name..." required>
+                        <div class="form-text">Use clear, specific names (e.g., "Python Programming" not just "Python")</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="skillCategory" name="category">
+                            <option value="programming">Programming</option>
+                            <option value="design">Design & Creative</option>
+                            <option value="business">Business & Finance</option>
+                            <option value="language">Languages</option>
+                            <option value="lifestyle">Lifestyle</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="skillDescription" name="description" rows="3"
+                                  placeholder="Brief description of this skill..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="autoApprove" name="auto_approve" checked>
+                            <label class="form-check-label" for="autoApprove">
+                                Auto-approve for all users
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-1"></i>Save Skill
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Merge Skills Modal -->
+<div class="modal fade" id="mergeSkillModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-compress me-2 text-warning"></i>
+                    Merge Skills
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This will merge <strong id="sourceSkillName"></strong> into another skill. All users with the source skill will be transferred to the target skill.
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Merge Into:</label>
+                    <select class="form-select" id="targetSkill">
+                        <option value="">Select target skill...</option>
+                        {% for skill in skills %}
+                            <option value="{{ skill.id }}">{{ skill.name }} ({{ skill_usage[skill.id] }} users)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Reason for Merge:</label>
+                    <textarea class="form-control" id="mergeReason" rows="2" 
+                              placeholder="Why are these skills being merged?"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="confirmMerge()">
+                    <i class="fas fa-compress me-1"></i>Merge Skills
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skill Usage Details Modal -->
+<div class="modal fade" id="skillUsageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-users me-2"></i>
+                    Skill Usage Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="skillUsageContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    let selectedSkillId = null;
+    
+    function filterSkills() {
+        const searchTerm = document.getElementById('skillSearch').value.toLowerCase();
+        const usageFilter = document.getElementById('usageFilter').value;
+        const rows = document.querySelectorAll('.skill-row');
+        
+        rows.forEach(row => {
+            const skillName = row.querySelector('strong').textContent.toLowerCase();
+            const usageText = row.querySelector('.usage-info strong').textContent;
+            const usageCount = parseInt(usageText);
+            
+            let showRow = true;
+            
+            // Search filter
+            if (searchTerm && !skillName.includes(searchTerm)) {
+                showRow = false;
+            }
+            
+            // Usage filter
+            if (usageFilter !== 'all') {
+                switch (usageFilter) {
+                    case 'popular':
+                        if (usageCount < 10) showRow = false;
+                        break;
+                    case 'moderate':
+                        if (usageCount < 3 || usageCount > 9) showRow = false;
+                        break;
+                    case 'low':
+                        if (usageCount < 1 || usageCount > 2) showRow = false;
+                        break;
+                    case 'unused':
+                        if (usageCount > 0) showRow = false;
+                        break;
+                }
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+    
+    function sortSkills() {
+        const sortBy = document.getElementById('sortBy').value;
+        const tbody = document.querySelector('#skillsTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('.skill-row'));
+        
+        rows.sort((a, b) => {
+            switch (sortBy) {
+                case 'name_asc':
+                    return a.querySelector('strong').textContent.localeCompare(b.querySelector('strong').textContent);
+                case 'name_desc':
+                    return b.querySelector('strong').textContent.localeCompare(a.querySelector('strong').textContent);
+                case 'usage_desc':
+                    return parseInt(b.querySelector('.usage-info strong').textContent) - parseInt(a.querySelector('.usage-info strong').textContent);
+                case 'usage_asc':
+                    return parseInt(a.querySelector('.usage-info strong').textContent) - parseInt(b.querySelector('.usage-info strong').textContent);
+                default:
+                    return 0;
+            }
+        });
+        
+        rows.forEach(row => tbody.appendChild(row));
+    }
+    
+    function toggleAllSkills() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.skill-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+    }
+    
+    function showAddSkillModal() {
+        document.getElementById('skillModalTitle').innerHTML = '<i class="fas fa-plus me-2"></i>Add New Skill';
+        document.getElementById('skillForm').reset();
+        selectedSkillId = null;
+        
+        const modal = new bootstrap.Modal(document.getElementById('skillModal'));
+        modal.show();
+    }
+    
+    function editSkill(skillId, skillName) {
+        document.getElementById('skillModalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Skill';
+        document.getElementById('skillName').value = skillName;
+        selectedSkillId = skillId;
+        
+        const modal = new bootstrap.Modal(document.getElementById('skillModal'));
+        modal.show();
+    }
+    
+    function showMergeModal(skillId, skillName) {
+        selectedSkillId = skillId;
+        document.getElementById('sourceSkillName').textContent = skillName;
+        
+        // Remove the source skill from target options
+        const targetSelect = document.getElementById('targetSkill');
+        Array.from(targetSelect.options).forEach(option => {
+            if (option.value == skillId) {
+                option.style.display = 'none';
+            } else {
+                option.style.display = '';
+            }
+        });
+        
+        const modal = new bootstrap.Modal(document.getElementById('mergeSkillModal'));
+        modal.show();
+    }
+    
+    function confirmMerge() {
+        const targetId = document.getElementById('targetSkill').value;
+        const reason = document.getElementById('mergeReason').value;
+        
+        if (!targetId) {
+            alert('Please select a target skill to merge into.');
+            return;
+        }
+        
+        if (confirm('Are you sure you want to merge these skills? This action cannot be undone.')) {
+            // Implement merge logic here
+            console.log(`Merging skill ${selectedSkillId} into ${targetId}. Reason: ${reason}`);
+            alert('Skills would be merged successfully! (Implementation pending)');
+            
+            bootstrap.Modal.getInstance(document.getElementById('mergeSkillModal')).hide();
+        }
+    }
+    
+    function viewSkillUsage(skillId) {
+        const modal = new bootstrap.Modal(document.getElementById('skillUsageModal'));
+        const content = document.getElementById('skillUsageContent');
+        
+        // Show loading
+        content.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading usage details...</p>
+            </div>
+        `;
+        
+        modal.show();
+        
+        // Simulate loading (replace with actual API call)
+        setTimeout(() => {
+            content.innerHTML = `
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Usage Statistics</h6>
+                        <p><strong>Total Users:</strong> 15</p>
+                        <p><strong>Offering:</strong> 10 users</p>
+                        <p><strong>Wanting:</strong> 5 users</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Recent Activity</h6>
+                        <p><strong>New this week:</strong> 2 users</p>
+                        <p><strong>Last addition:</strong> 2 days ago</p>
+                    </div>
+                </div>
+                <hr>
+                <h6>Top Users with this Skill</h6>
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>John Doe</span>
+                        <span class="badge bg-success">Offering</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>Jane Smith</span>
+                        <span class="badge bg-info">Wanting</span>
+                    </div>
+                </div>
+            `;
+        }, 1000);
+    }
+    
+    function archiveSkill(skillId) {
+        if (confirm('Archive this skill? It will be hidden from new users but existing associations will remain.')) {
+            console.log(`Archive skill ${skillId}`);
+            alert('Skill archived successfully! (Implementation pending)');
+        }
+    }
+    
+    function bulkAction(action) {
+        const selected = Array.from(document.querySelectorAll('.skill-checkbox:checked')).map(cb => cb.value);
+        
+        if (selected.length === 0) {
+            alert('Please select at least one skill.');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to ${action} ${selected.length} skills?`)) {
+            console.log(`Bulk ${action} for skills:`, selected);
+            alert(`Bulk ${action} would be implemented here for ${selected.length} skills.`);
+        }
+    }
+    
+    function exportSkills() {
+        // Generate CSV export
+        const skills = Array.from(document.querySelectorAll('.skill-row')).map(row => {
+            const name = row.querySelector('strong').textContent;
+            const usage = row.querySelector('.usage-info strong').textContent;
+            return `"${name}","${usage}"`;
+        });
+        
+        const csv = ['Skill Name,Usage Count', ...skills].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `skills_export_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+    
+    // Handle skill form submission
+    document.getElementById('skillForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const skillName = formData.get('skill_name');
+        
+        if (selectedSkillId) {
+            // Update existing skill
+            console.log(`Update skill ${selectedSkillId} with name: ${skillName}`);
+            alert('Skill updated successfully! (Implementation pending)');
+        } else {
+            // Create new skill
+            console.log(`Create new skill: ${skillName}`);
+            alert('Skill created successfully! (Implementation pending)');
+        }
+        
+        bootstrap.Modal.getInstance(document.getElementById('skillModal')).hide();
+    });
+</script>
+{% endblock %}

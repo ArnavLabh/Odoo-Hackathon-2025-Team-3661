@@ -1,0 +1,660 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Skill Descriptions - Admin Dashboard{% endblock %}
+{% block page_title %}Skill Descriptions Moderation{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-1">{{ pending_count }}</h3>
+            <p class="text-muted mb-0">Pending Review</p>
+            <a href="?status=pending" class="btn btn-sm btn-outline-warning">
+                <i class="fas fa-eye me-1"></i>Review Now
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-danger">
+                <i class="fas fa-flag"></i>
+            </div>
+            <h3 class="mb-1">{{ reported_count }}</h3>
+            <p class="text-muted mb-0">Reported</p>
+            <a href="?status=reported" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-exclamation-triangle me-1"></i>Investigate
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="mb-1">{{ descriptions.total if status_filter == 'approved' else 'N/A' }}</h3>
+            <p class="text-muted mb-0">Approved</p>
+            <a href="?status=approved" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-list me-1"></i>View All
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-info">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <h3 class="mb-1">{{ descriptions.total }}</h3>
+            <p class="text-muted mb-0">Total Submissions</p>
+            <small class="text-info">
+                All descriptions submitted
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="GET" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Status Filter</label>
+            <select class="form-select" name="status">
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Review</option>
+                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                <option value="reported" {% if status_filter == 'reported' %}selected{% endif %}>Reported</option>
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Descriptions</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Content Type</label>
+            <select class="form-select" name="content_type">
+                <option value="all">All Content</option>
+                <option value="short">Short (< 50 chars)</option>
+                <option value="medium">Medium (50-200 chars)</option>
+                <option value="long">Long (> 200 chars)</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">Sort By</label>
+            <select class="form-select" name="sort">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="priority">Priority (Reported First)</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter me-1"></i>Apply Filter
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Descriptions Table -->
+<div class="data-table">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h5 class="mb-0">
+            <i class="fas fa-file-alt me-2"></i>
+            Skill Descriptions ({{ descriptions.total }} total)
+        </h5>
+        
+        <div class="btn-group">
+            <div class="btn-group">
+                <button class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-check me-1"></i>Quick Actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('approve')">
+                        <i class="fas fa-check me-2"></i>Bulk Approve
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('reject')">
+                        <i class="fas fa-times me-2"></i>Bulk Reject
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" onclick="bulkAction('flag')">
+                        <i class="fas fa-flag me-2"></i>Flag for Review
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th width="50">
+                        <input type="checkbox" id="selectAll" onchange="toggleAllDescriptions()" />
+                    </th>
+                    <th>User & Skill</th>
+                    <th>Description Content</th>
+                    <th>Status</th>
+                    <th>Metrics</th>
+                    <th>Submission Date</th>
+                    <th width="250">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for description in descriptions.items %}
+                <tr class="description-row {% if description.is_reported %}table-warning{% endif %}" 
+                    data-description-id="{{ description.id }}">
+                    <td>
+                        <input type="checkbox" class="description-checkbox" value="{{ description.id }}" />
+                    </td>
+                    <td>
+                        <div class="user-skill-info">
+                            <!-- User Info -->
+                            <div class="d-flex align-items-center mb-2">
+                                {% if description.user.photo_url %}
+                                    <img src="{{ description.user.photo_url }}" alt="{{ description.user.name }}" 
+                                         class="rounded-circle me-2" width="30" height="30">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 30px; height: 30px; color: white; font-size: 12px;">
+                                        {{ description.user.name[0].upper() }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ description.user.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ description.user.email }}</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Skill Info -->
+                            <div class="skill-info">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-tag me-1"></i>
+                                    {{ description.skill.name }}
+                                </span>
+                                {% if description.is_reported %}
+                                    <span class="badge bg-danger ms-1">
+                                        <i class="fas fa-flag me-1"></i>Reported
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="description-content">
+                            <div class="content-preview mb-2">
+                                {% if description.description|length > 150 %}
+                                    <p class="mb-1">{{ description.description[:150] }}...</p>
+                                    <button class="btn btn-sm btn-outline-info" onclick="toggleFullContent('{{ description.id }}')">
+                                        <i class="fas fa-expand me-1"></i>Show Full
+                                    </button>
+                                {% else %}
+                                    <p class="mb-1">{{ description.description }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="content-full d-none" id="fullContent{{ description.id }}">
+                                <p class="mb-2">{{ description.description }}</p>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullContent('{{ description.id }}')">
+                                    <i class="fas fa-compress me-1"></i>Show Less
+                                </button>
+                            </div>
+                            
+                            <!-- Content Analysis -->
+                            <div class="content-analysis mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-text-width me-1"></i>
+                                    {{ description.description|length }} characters
+                                    
+                                    {% if description.description|length < 20 %}
+                                        <span class="badge bg-warning ms-1">Too Short</span>
+                                    {% elif description.description|length > 300 %}
+                                        <span class="badge bg-info ms-1">Very Long</span>
+                                    {% endif %}
+                                    
+                                    {% if 'http' in description.description.lower() %}
+                                        <span class="badge bg-danger ms-1">Contains URL</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="status-info">
+                            {% if description.moderation_status == 'pending' %}
+                                <span class="status-badge status-pending">
+                                    <i class="fas fa-clock me-1"></i>Pending
+                                </span>
+                            {% elif description.moderation_status == 'approved' %}
+                                <span class="status-badge status-active">
+                                    <i class="fas fa-check-circle me-1"></i>Approved
+                                </span>
+                            {% elif description.moderation_status == 'rejected' %}
+                                <span class="status-badge bg-danger text-white">
+                                    <i class="fas fa-times-circle me-1"></i>Rejected
+                                </span>
+                            {% endif %}
+                            
+                            {% if description.moderated_by %}
+                                <div class="mt-1">
+                                    <small class="text-muted">
+                                        By: {{ description.moderator.name if description.moderator else 'Unknown' }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                            
+                            {% if description.moderator_notes %}
+                                <div class="mt-1">
+                                    <small class="text-info">
+                                        <i class="fas fa-sticky-note me-1"></i>
+                                        Has notes
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="description-metrics">
+                            <!-- Quality Score -->
+                            <div class="mb-1">
+                                <small class="text-muted">Quality Score:</small>
+                                {% set quality_score = (description.description|length / 100 * 50) | min(100) | max(10) %}
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar 
+                                        {% if quality_score >= 80 %}bg-success
+                                        {% elif quality_score >= 60 %}bg-warning
+                                        {% else %}bg-danger
+                                        {% endif %}" 
+                                        style="width: {{ quality_score }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ "%.0f"|format(quality_score) }}%</small>
+                            </div>
+                            
+                            <!-- Content Flags -->
+                            <div class="content-flags">
+                                {% if 'http' in description.description.lower() %}
+                                    <span class="badge bg-warning">URL</span>
+                                {% endif %}
+                                {% if description.description|length < 20 %}
+                                    <span class="badge bg-secondary">Short</span>
+                                {% endif %}
+                                {% if description.is_reported %}
+                                    <span class="badge bg-danger">Flagged</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="submission-info">
+                            <small>
+                                {{ description.created_at.strftime('%Y-%m-%d') if description.created_at else 'N/A' }}
+                                <br>
+                                {{ description.created_at.strftime('%H:%M') if description.created_at else '' }}
+                            </small>
+                            
+                            {% if description.moderated_at %}
+                                <div class="mt-1">
+                                    <small class="text-success">
+                                        Reviewed: {{ description.moderated_at.strftime('%m/%d') }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if description.moderation_status == 'pending' %}
+                                <!-- Quick Approve -->
+                                <button class="action-btn btn-outline-success" title="Quick Approve"
+                                        onclick="quickModerate('{{ description.id }}', 'approve')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                
+                                <!-- Quick Reject -->
+                                <button class="action-btn btn-outline-danger" title="Quick Reject"
+                                        onclick="quickModerate('{{ description.id }}', 'reject')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                
+                                <!-- Detailed Review -->
+                                <button class="action-btn btn-outline-primary" title="Detailed Review"
+                                        onclick="showModerationModal('{{ description.id }}')">
+                                    <i class="fas fa-gavel"></i>
+                                </button>
+                            {% else %}
+                                <!-- View Details -->
+                                <button class="action-btn btn-outline-info" title="View Details"
+                                        onclick="viewDescriptionDetails('{{ description.id }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                
+                                <!-- Edit Decision -->
+                                <button class="action-btn btn-outline-warning" title="Edit Decision"
+                                        onclick="showModerationModal('{{ description.id }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            {% endif %}
+                            
+                            <!-- Flag/Report -->
+                            {% if not description.is_reported %}
+                                <a href="{{ url_for('admin.mark_skill_description_reported', desc_id=description.id) }}" 
+                                   class="action-btn btn-outline-warning" title="Flag as Reported"
+                                   onclick="return confirm('Flag this description as reported?')">
+                                    <i class="fas fa-flag"></i>
+                                </a>
+                            {% endif %}
+                            
+                            <!-- Contact User -->
+                            <button class="action-btn btn-outline-secondary" title="Contact User"
+                                    onclick="contactUser('{{ description.user.email }}', '{{ description.user.name }}')">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if descriptions.pages > 1 %}
+    <div class="p-3 border-top">
+        <nav aria-label="Descriptions pagination">
+            <ul class="pagination justify-content-center mb-0">
+                {% if descriptions.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.skill_descriptions', page=descriptions.prev_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in descriptions.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != descriptions.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.skill_descriptions', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if descriptions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.skill_descriptions', page=descriptions.next_num, status=status_filter) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Moderation Modal -->
+<div class="modal fade" id="moderationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-gavel me-2"></i>
+                    Moderate Skill Description
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="moderationForm" method="POST">
+                <div class="modal-body">
+                    <div id="moderationContent">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>Reject
+                    </button>
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Approve
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Contact User Modal -->
+<div class="modal fade" id="contactUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-envelope me-2"></i>
+                    Contact User
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Recipient</label>
+                    <input type="text" class="form-control" id="contactRecipient" readonly />
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Subject</label>
+                    <select class="form-select" id="contactSubject">
+                        <option value="description_feedback">Skill Description Feedback</option>
+                        <option value="content_guidelines">Content Guidelines Reminder</option>
+                        <option value="approval_notification">Description Approved</option>
+                        <option value="rejection_explanation">Description Rejected - Explanation</option>
+                        <option value="custom">Custom Message</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control" id="contactMessage" rows="5" 
+                              placeholder="Your message to the user..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendContactMessage()">
+                    <i class="fas fa-paper-plane me-1"></i>Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    let selectedDescriptionId = null;
+    
+    function toggleAllDescriptions() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.description-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+    }
+    
+    function toggleFullContent(descriptionId) {
+        const preview = document.querySelector(`[data-description-id="${descriptionId}"] .content-preview`);
+        const full = document.getElementById(`fullContent${descriptionId}`);
+        
+        preview.classList.toggle('d-none');
+        full.classList.toggle('d-none');
+    }
+    
+    function quickModerate(descriptionId, action) {
+        if (confirm(`${action === 'approve' ? 'Approve' : 'Reject'} this skill description?`)) {
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{{ url_for('admin.moderate_skill_description', desc_id=0, action='approve') }}`.replace('0', descriptionId).replace('approve', action);
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'moderator_notes';
+            input.value = `Quick ${action} by admin`;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    function showModerationModal(descriptionId) {
+        selectedDescriptionId = descriptionId;
+        const modal = new bootstrap.Modal(document.getElementById('moderationModal'));
+        const content = document.getElementById('moderationContent');
+        const form = document.getElementById('moderationForm');
+        
+        // Update form action
+        form.action = `{{ url_for('admin.moderate_skill_description', desc_id=0, action='approve') }}`.replace('0', descriptionId);
+        
+        // Show loading
+        content.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading description details...</p>
+            </div>
+        `;
+        
+        modal.show();
+        
+        // Simulate loading details (replace with actual API call)
+        setTimeout(() => {
+            content.innerHTML = `
+                <div class="description-review">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>User Information</h6>
+                            <p><strong>Name:</strong> John Doe</p>
+                            <p><strong>Email:</strong> john.doe@example.com</p>
+                            <p><strong>Member since:</strong> 2024-01-15</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Skill Information</h6>
+                            <p><strong>Skill:</strong> Python Programming</p>
+                            <p><strong>Category:</strong> Programming</p>
+                            <p><strong>Submission date:</strong> 2024-01-20</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6>Description Content</h6>
+                    <div class="border rounded p-3 bg-light mb-3">
+                        <p>Sample skill description content would appear here. This is the full description that the user submitted for moderation.</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Moderator Notes</label>
+                        <textarea class="form-control" name="moderator_notes" rows="3" 
+                                  placeholder="Add notes about your decision (optional)..."></textarea>
+                        <div class="form-text">These notes will be saved for reference but not shown to the user.</div>
+                    </div>
+                    
+                    <div class="moderation-guidelines">
+                        <h6>Moderation Guidelines</h6>
+                        <ul class="small text-muted">
+                            <li>Descriptions should be accurate and helpful</li>
+                            <li>No promotional content or external links</li>
+                            <li>Must be appropriate and professional</li>
+                            <li>Should provide value to other users</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }, 1000);
+    }
+    
+    function viewDescriptionDetails(descriptionId) {
+        alert(`View detailed information for description ${descriptionId}.\n\nThis would show full moderation history, user details, and content analysis.`);
+    }
+    
+    function contactUser(email, name) {
+        document.getElementById('contactRecipient').value = `${name} <${email}>`;
+        
+        const modal = new bootstrap.Modal(document.getElementById('contactUserModal'));
+        modal.show();
+    }
+    
+    function sendContactMessage() {
+        const recipient = document.getElementById('contactRecipient').value;
+        const subject = document.getElementById('contactSubject').value;
+        const message = document.getElementById('contactMessage').value;
+        
+        if (!message.trim()) {
+            alert('Please enter a message.');
+            return;
+        }
+        
+        // Simulate sending message
+        alert(`Message sent to ${recipient}!\n\nSubject: ${subject}\nMessage: ${message.substring(0, 50)}...`);
+        
+        bootstrap.Modal.getInstance(document.getElementById('contactUserModal')).hide();
+    }
+    
+    function bulkAction(action) {
+        const selected = Array.from(document.querySelectorAll('.description-checkbox:checked')).map(cb => cb.value);
+        
+        if (selected.length === 0) {
+            alert('Please select at least one description.');
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to ${action} ${selected.length} descriptions?`)) {
+            console.log(`Bulk ${action} for descriptions:`, selected);
+            alert(`Bulk ${action} would be implemented here for ${selected.length} descriptions.`);
+        }
+    }
+    
+    // Auto-refresh for pending descriptions
+    {% if status_filter == 'pending' %}
+    setTimeout(function() {
+        location.reload();
+    }, 300000); // Refresh every 5 minutes for pending descriptions
+    {% endif %}
+    
+    // Subject change handler for contact modal
+    document.getElementById('contactSubject').addEventListener('change', function() {
+        const templates = {
+            description_feedback: 'Thank you for submitting your skill description. We have some feedback to help improve it.',
+            content_guidelines: 'We wanted to remind you of our content guidelines for skill descriptions.',
+            approval_notification: 'Great news! Your skill description has been approved and is now visible to other users.',
+            rejection_explanation: 'We need to discuss your recent skill description submission.',
+            custom: ''
+        };
+        
+        document.getElementById('contactMessage').value = templates[this.value] || '';
+    });
+</script>
+{% endblock %}

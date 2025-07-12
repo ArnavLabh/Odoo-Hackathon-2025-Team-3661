@@ -1,0 +1,589 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Notifications Management - Admin Dashboard{% endblock %}
+{% block page_title %}Platform Notifications{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-primary">
+                <i class="fas fa-bell"></i>
+            </div>
+            <h3 class="mb-1">{{ notifications.total }}</h3>
+            <p class="text-muted mb-0">Total Notifications</p>
+            <a href="{{ url_for('admin.create_notification') }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-plus me-1"></i>Create New
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="mb-1">{{ notifications.items|selectattr('is_active')|list|length }}</h3>
+            <p class="text-muted mb-0">Active Notifications</p>
+            <small class="text-success">
+                Currently visible to users
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3 class="mb-1">{{ notifications.items|selectattr('expires_at')|list|length }}</h3>
+            <p class="text-muted mb-0">Scheduled</p>
+            <small class="text-warning">
+                With expiration dates
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <div class="stat-icon stat-info">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3 class="mb-1">All</h3>
+            <p class="text-muted mb-0">Reach</p>
+            <small class="text-info">
+                Platform-wide notifications
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Types Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>
+                    Quick Create
+                </h5>
+            </div>
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-danger w-100" onclick="quickNotification('maintenance')">
+                            <i class="fas fa-tools me-2"></i>
+                            Maintenance Alert
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-warning w-100" onclick="quickNotification('security')">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Security Notice
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-info w-100" onclick="quickNotification('feature')">
+                            <i class="fas fa-star me-2"></i>
+                            New Feature
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-success w-100" onclick="quickNotification('general')">
+                            <i class="fas fa-bullhorn me-2"></i>
+                            General Notice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications Table -->
+<div class="data-table">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            All Notifications
+        </h5>
+        
+        <div class="btn-group">
+            <a href="{{ url_for('admin.create_notification') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Create Notification
+            </a>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-1"></i>Filter
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?filter=active">
+                        <i class="fas fa-check me-2"></i>Active Only
+                    </a></li>
+                    <li><a class="dropdown-item" href="?filter=expired">
+                        <i class="fas fa-clock me-2"></i>Expired
+                    </a></li>
+                    <li><a class="dropdown-item" href="?filter=scheduled">
+                        <i class="fas fa-calendar me-2"></i>Scheduled
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="?filter=all">
+                        <i class="fas fa-list me-2"></i>All Notifications
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Notification</th>
+                    <th>Type</th>
+                    <th>Target</th>
+                    <th>Status</th>
+                    <th>Schedule</th>
+                    <th>Creator</th>
+                    <th width="200">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for notification in notifications.items %}
+                <tr class="notification-row" data-notification-id="{{ notification.id }}">
+                    <td>
+                        <div class="notification-content">
+                            <strong>{{ notification.title }}</strong>
+                            <p class="mb-1 text-muted">{{ notification.message[:100] }}{% if notification.message|length > 100 %}...{% endif %}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                Created: {{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else 'N/A' }}
+                            </small>
+                        </div>
+                    </td>
+                    <td>
+                        {% if notification.notification_type == 'maintenance' %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-tools me-1"></i>Maintenance
+                            </span>
+                        {% elif notification.notification_type == 'security' %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-shield-alt me-1"></i>Security
+                            </span>
+                        {% elif notification.notification_type == 'feature' %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-star me-1"></i>Feature
+                            </span>
+                        {% else %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-bullhorn me-1"></i>General
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="target-info">
+                            {% if notification.target_audience == 'all' %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-globe me-1"></i>All Users
+                                </span>
+                            {% elif notification.target_audience == 'active' %}
+                                <span class="badge bg-info">
+                                    <i class="fas fa-users me-1"></i>Active Users
+                                </span>
+                            {% elif notification.target_audience == 'admins' %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-crown me-1"></i>Admins Only
+                                </span>
+                            {% endif %}
+                            
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    {% if notification.target_audience == 'all' %}
+                                        Reaches all users
+                                    {% elif notification.target_audience == 'active' %}
+                                        Active users only
+                                    {% else %}
+                                        Admin users only
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if notification.is_active %}
+                            {% if notification.expires_at and notification.expires_at < now() %}
+                                <span class="status-badge bg-secondary text-white">
+                                    <i class="fas fa-clock me-1"></i>Expired
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-active">
+                                    <i class="fas fa-check-circle me-1"></i>Active
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="status-badge bg-secondary text-white">
+                                <i class="fas fa-pause me-1"></i>Inactive
+                            </span>
+                        {% endif %}
+                        
+                        {% if notification.is_active and notification.expires_at %}
+                            <div class="mt-1">
+                                <small class="text-warning">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Auto-expires
+                                </small>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="schedule-info">
+                            {% if notification.expires_at %}
+                                <div class="mb-1">
+                                    <i class="fas fa-calendar-times text-warning me-1"></i>
+                                    <strong>Expires:</strong><br>
+                                    <small>{{ notification.expires_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                
+                                {% set days_until_expiry = (notification.expires_at.date() - now().date()).days %}
+                                {% if days_until_expiry > 0 %}
+                                    <small class="text-info">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ days_until_expiry }} days left
+                                    </small>
+                                {% elif days_until_expiry == 0 %}
+                                    <small class="text-warning">
+                                        <i class="fas fa-exclamation me-1"></i>
+                                        Expires today
+                                    </small>
+                                {% else %}
+                                    <small class="text-danger">
+                                        <i class="fas fa-times me-1"></i>
+                                        Expired {{ days_until_expiry|abs }} days ago
+                                    </small>
+                                {% endif %}
+                            {% else %}
+                                <small class="text-muted">
+                                    <i class="fas fa-infinity me-1"></i>
+                                    No expiration
+                                </small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="creator-info">
+                            {% if notification.creator %}
+                                <strong>{{ notification.creator.name }}</strong><br>
+                                <small class="text-muted">{{ notification.creator.email }}</small>
+                            {% else %}
+                                <small class="text-muted">System</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <!-- Preview Notification -->
+                            <button class="action-btn btn-outline-info" title="Preview"
+                                    onclick="previewNotification('{{ notification.id }}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            
+                            <!-- Edit Notification -->
+                            <button class="action-btn btn-outline-primary" title="Edit"
+                                    onclick="editNotification('{{ notification.id }}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            
+                            <!-- Toggle Active Status -->
+                            <a href="{{ url_for('admin.toggle_notification', notification_id=notification.id) }}" 
+                               class="action-btn btn-outline-{% if notification.is_active %}warning{% else %}success{% endif %}" 
+                               title="{% if notification.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                <i class="fas fa-{% if notification.is_active %}pause{% else %}play{% endif %}"></i>
+                            </a>
+                            
+                            <!-- Duplicate Notification -->
+                            <button class="action-btn btn-outline-secondary" title="Duplicate"
+                                    onclick="duplicateNotification('{{ notification.id }}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            
+                            <!-- Delete Notification -->
+                            <a href="{{ url_for('admin.delete_notification', notification_id=notification.id) }}" 
+                               class="action-btn btn-outline-danger" title="Delete"
+                               onclick="return confirm('Delete this notification? This action cannot be undone.')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if notifications.pages > 1 %}
+    <div class="p-3 border-top">
+        <nav aria-label="Notifications pagination">
+            <ul class="pagination justify-content-center mb-0">
+                {% if notifications.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.notifications', page=notifications.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for page_num in notifications.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != notifications.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.notifications', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">…</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if notifications.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.notifications', page=notifications.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Preview Notification Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>
+                    Notification Preview
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="previewContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="sendTestNotification()">
+                    <i class="fas fa-paper-plane me-1"></i>Send Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Notification Templates Modal -->
+<div class="modal fade" id="quickNotificationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickNotificationTitle">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Notification
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickNotificationForm" method="POST" action="{{ url_for('admin.create_notification') }}">
+                <div class="modal-body">
+                    <input type="hidden" id="quickNotificationType" name="notification_type" />
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="quickTitle" name="title" required />
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" id="quickMessage" name="message" rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Target Audience</label>
+                        <select class="form-select" name="target_audience">
+                            <option value="all">All Users</option>
+                            <option value="active">Active Users Only</option>
+                            <option value="admins">Admins Only</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Expires At (Optional)</label>
+                        <input type="datetime-local" class="form-control" name="expires_at" />
+                        <div class="form-text">Leave empty for no expiration</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Create Notification
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    function quickNotification(type) {
+        const modal = new bootstrap.Modal(document.getElementById('quickNotificationModal'));
+        const templates = {
+            maintenance: {
+                title: 'Scheduled Maintenance',
+                message: 'We will be performing scheduled maintenance on our servers. The platform may be temporarily unavailable during this time. We apologize for any inconvenience.',
+                icon: 'fas fa-tools',
+                color: 'danger'
+            },
+            security: {
+                title: 'Security Update',
+                message: 'Important security updates have been applied to enhance platform safety. Please review your account settings and update your password if needed.',
+                icon: 'fas fa-shield-alt',
+                color: 'warning'
+            },
+            feature: {
+                title: 'New Feature Available',
+                message: 'We\'ve added exciting new features to improve your skill-swapping experience! Check out the latest updates in your dashboard.',
+                icon: 'fas fa-star',
+                color: 'info'
+            },
+            general: {
+                title: 'Platform Announcement',
+                message: 'Important announcement for all platform users. Please read the details carefully.',
+                icon: 'fas fa-bullhorn',
+                color: 'success'
+            }
+        };
+        
+        const template = templates[type];
+        
+        document.getElementById('quickNotificationTitle').innerHTML = `<i class="${template.icon} me-2"></i>${template.title}`;
+        document.getElementById('quickNotificationType').value = type;
+        document.getElementById('quickTitle').value = template.title;
+        document.getElementById('quickMessage').value = template.message;
+        
+        modal.show();
+    }
+    
+    function previewNotification(notificationId) {
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        const content = document.getElementById('previewContent');
+        
+        // Show loading
+        content.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading notification preview...</p>
+            </div>
+        `;
+        
+        modal.show();
+        
+        // Simulate loading notification data (replace with actual API call)
+        setTimeout(() => {
+            content.innerHTML = `
+                <div class="notification-preview border rounded p-3 mb-3" style="background: #f8f9fa;">
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon me-3">
+                            <i class="fas fa-bell text-primary" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div class="notification-content flex-grow-1">
+                            <h6 class="mb-1">Sample Notification Title</h6>
+                            <p class="mb-2">This is how the notification will appear to users on the platform. The message content will be displayed here with proper formatting.</p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Would be sent to: All Users
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="notification-stats">
+                    <h6>Estimated Reach</h6>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fw-bold text-primary">150</div>
+                            <small class="text-muted">Total Recipients</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-success">~75%</div>
+                            <small class="text-muted">Active Users</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-info">24h</div>
+                            <small class="text-muted">Visibility</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }, 1000);
+    }
+    
+    function editNotification(notificationId) {
+        // Redirect to edit form or open edit modal
+        window.location.href = `{{ url_for('admin.create_notification') }}?edit=${notificationId}`;
+    }
+    
+    function duplicateNotification(notificationId) {
+        if (confirm('Create a copy of this notification?')) {
+            // Implement duplication logic
+            console.log(`Duplicate notification ${notificationId}`);
+            alert('Notification duplicated successfully! (Implementation pending)');
+        }
+    }
+    
+    function sendTestNotification() {
+        alert('Test notification would be sent to the admin user.\n\nThis feature helps verify the notification appearance before publishing.');
+        bootstrap.Modal.getInstance(document.getElementById('previewModal')).hide();
+    }
+    
+    // Auto-refresh every 2 minutes to show updated statuses
+    setInterval(() => {
+        // Check for expired notifications and update their status
+        document.querySelectorAll('.notification-row').forEach(row => {
+            // This would check expiration status and update UI accordingly
+        });
+    }, 120000);
+    
+    // Form validation
+    document.getElementById('quickNotificationForm').addEventListener('submit', function(e) {
+        const title = document.getElementById('quickTitle').value.trim();
+        const message = document.getElementById('quickMessage').value.trim();
+        
+        if (!title || !message) {
+            e.preventDefault();
+            alert('Please fill in both title and message fields.');
+            return;
+        }
+        
+        if (message.length > 500) {
+            e.preventDefault();
+            alert('Message is too long. Please keep it under 500 characters.');
+            return;
+        }
+    });
+</script>
+{% endblock %}
