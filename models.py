@@ -34,6 +34,38 @@ class User(db.Model):
     def is_oauth_user(self):
         """Check if user registered via OAuth"""
         return bool(self.google_id)
+        
+    def get_offered_skills(self):
+        """Get all skills offered by the user"""
+        return [us.skill for us in self.skills if us.type == 'offered']
+        
+    def get_wanted_skills(self):
+        """Get all skills wanted by the user"""
+        return [us.skill for us in self.skills if us.type == 'wanted']
+        
+    def get_average_rating(self):
+        """Calculate the user's average rating from feedback"""
+        from sqlalchemy import func
+        from app import db
+        
+        # Get all feedback where this user was involved in the swap
+        result = db.session.query(func.avg(Feedback.rating))\
+            .join(SwapRequest, ((SwapRequest.from_user_id == self.id) | (SwapRequest.to_user_id == self.id)))\
+            .filter(Feedback.reviewer_id != self.id)\
+            .scalar()
+            
+        return result or 0.0
+        
+    def get_completed_swaps_count(self):
+        """Count the number of completed swaps for this user"""
+        from app import db
+        
+        count = db.session.query(SwapRequest)\
+            .filter(((SwapRequest.from_user_id == self.id) | (SwapRequest.to_user_id == self.id)) & 
+                   (SwapRequest.status == 'completed'))\
+            .count()
+            
+        return count
 
 # Skill Table
 class Skill(db.Model):

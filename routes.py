@@ -412,25 +412,89 @@ def submit_feedback():
 def browse():
     search_query = request.args.get('search', '')
     skill_filter = request.args.get('skill', '')
+    availability_filter = request.args.get('availability', '')
+    location_filter = request.args.get('location', '')
+    sort_by = request.args.get('sort', 'newest')
+    page = request.args.get('page', 1, type=int)
+    per_page = 12  # Number of users per page
     
     # Base query for public, non-banned users
     query = User.query.filter_by(is_public=True, is_banned=False)
     
     # Apply search filters
     if search_query:
-        query = query.filter(User.name.contains(search_query))
+        query = query.filter(User.name.ilike(f'%{search_query}%'))
     
+    # Apply skill filter
     if skill_filter:
         # Find users who offer this skill
         skill = Skill.query.filter_by(name=skill_filter).first()
         if skill:
             user_ids = [us.user_id for us in UserSkill.query.filter_by(skill_id=skill.id, type='offered').all()]
-            query = query.filter(User.id.in_(user_ids))
+            if user_ids:
+                query = query.filter(User.id.in_(user_ids))
     
-    users = query.all()
+    # Apply availability filter
+    if availability_filter:
+        query = query.filter(User.availability.ilike(f'%{availability_filter}%'))
+    
+    # Apply location filter
+    if location_filter:
+        query = query.filter(User.location.ilike(f'%{location_filter}%'))
+    
+    # Apply sorting
+    if sort_by == 'rating':
+        # This would require a more complex query with joins to calculate average ratings
+        # For simplicity, we'll just sort by name for now
+        query = query.order_by(User.name)
+    elif sort_by == 'active':
+        # Sort by last login time
+        query = query.order_by(User.last_login.desc())
+    elif sort_by == 'skills':
+        # This would require a subquery to count skills
+        # For simplicity, we'll sort by name
+        query = query.order_by(User.name)
+    else:  # newest
+        query = query.order_by(User.created_at.desc())
+    
+    # Execute query with pagination
+    total_users = query.count()
+    total_pages = (total_users + per_page - 1) // per_page  # Ceiling division
+    offset = (page - 1) * per_page
+    users = query.offset(offset).limit(per_page).all()
+    
+    # Get all skills for the filter dropdown
     all_skills = Skill.query.all()
     
-    return render_template('browse.html', users=users, skills=all_skills, search_query=search_query, skill_filter=skill_filter)
+    # Get all unique availability values
+    availabilities = db.session.query(User.availability).distinct().all()
+    availabilities = [a[0] for a in availabilities if a[0]]
+    
+    # Get all unique locations
+    locations = db.session.query(User.location).distinct().all()
+    locations = [l[0] for l in locations if l[0]]
+    
+    # Current time for online status
+    now = datetime.now()
+    
+    # Get current user for conditional display
+    current_user = get_current_user() if is_logged_in() else None
+    
+    return render_template('browse.html', 
+                          users=users, 
+                          skills=all_skills,
+                          availabilities=availabilities,
+                          locations=locations,
+                          search_query=search_query, 
+                          skill_filter=skill_filter,
+                          availability_filter=availability_filter,
+                          location_filter=location_filter,
+                          sort_by=sort_by,
+                          current_page=page,
+                          total_pages=total_pages,
+                          total_users=total_users,
+                          now=now,
+                          current_user=current_user)
 
 @main.route('/user/<int:user_id>')
 def view_user(user_id):
