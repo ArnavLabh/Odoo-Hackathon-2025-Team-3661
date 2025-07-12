@@ -3,9 +3,35 @@ from models import User, Skill, UserSkill, SwapRequest, Feedback, db
 import bcrypt
 from datetime import datetime
 import os
-from werkzeug.utils import secure_filename
+import re
 
 main = Blueprint('main', __name__)
+
+# Helper functions
+def secure_filename(filename):
+    """
+    Simple secure filename function to replace werkzeug dependency.
+    Removes/replaces unsafe characters from filename.
+    """
+    if not filename:
+        return ''
+    
+    # Remove path separators and other dangerous characters
+    filename = re.sub(r'[^\w\-_.]', '_', filename)
+    
+    # Remove leading dots and spaces
+    filename = filename.lstrip('. ')
+    
+    # Ensure it's not empty after cleaning
+    if not filename:
+        return 'unnamed_file'
+    
+    # Limit length
+    if len(filename) > 255:
+        name, ext = os.path.splitext(filename)
+        filename = name[:255-len(ext)] + ext
+    
+    return filename
 
 # Helper functions
 def hash_password(password):
@@ -76,14 +102,26 @@ def login():
         
         user = User.query.filter_by(email=email).first()
         
-        if user and check_password(password, user.password_hash):
-            if user.is_banned:
-                flash('Your account has been banned. Please contact support.', 'error')
-                return redirect(url_for('main.login'))
+        if user:
+            # Check if user has a password (not OAuth-only)
+            if not user.password_hash:
+                flash('This account was created with Google. Please use "Continue with Google" to login.', 'info')
+                return render_template('login.html')
             
-            session['user_id'] = user.id
-            flash(f'Welcome back, {user.name}!', 'success')
-            return redirect(url_for('main.dashboard'))
+            if check_password(password, user.password_hash):
+                if user.is_banned:
+                    flash('Your account has been banned. Please contact support.', 'error')
+                    return redirect(url_for('main.login'))
+                
+                # Update last login
+                user.last_login = datetime.now()
+                db.session.commit()
+                
+                session['user_id'] = user.id
+                flash(f'Welcome back, {user.name}!', 'success')
+                return redirect(url_for('main.dashboard'))
+            else:
+                flash('Invalid email or password.', 'error')
         else:
             flash('Invalid email or password.', 'error')
     

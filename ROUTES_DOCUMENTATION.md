@@ -82,10 +82,12 @@
 
 ## 🔒 Security Features
 - **Password Hashing**: Uses bcrypt for secure password storage
+- **Google OAuth**: Secure authentication with Google accounts
 - **Session Management**: Flask sessions for authentication
 - **Admin Protection**: Admin-only decorator for sensitive routes
 - **Privacy Controls**: Public/private profile toggle
-- **Input Validation**: Form validation and sanitization
+- **Input Validation**: Custom secure filename handling
+- **Clean Dependencies**: No werkzeug or babel dependencies
 
 ## 📁 Template Files Required
 ### Authentication
@@ -131,6 +133,8 @@
 
 ## 🔧 Configuration
 - SQLite database with bcrypt password hashing
+- Google OAuth integration for seamless authentication
 - Environment variables for configuration
 - Session-based authentication
-- File upload support for profile photos
+- Custom secure file upload handling
+- Minimal dependencies (no werkzeug, no babel)

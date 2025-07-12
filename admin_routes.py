@@ -40,7 +40,7 @@ def admin_dashboard():
     completed_swaps = SwapRequest.query.filter_by(status='completed').count()
     
     # Recent activity (last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = datetime.now() - timedelta(days=7)
     new_users_week = User.query.filter(User.id >= week_ago).count()
     new_swaps_week = SwapRequest.query.filter(SwapRequest.created_at >= week_ago).count()
     
