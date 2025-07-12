@@ -371,7 +371,7 @@
             <div class="auth-body">
                 <!-- Social Registration Options -->
                 <div class="social-login">
-                    <a href="#" class="btn-social">
+                    <a href="{{ url_for('google_auth.google_login') }}" class="btn-social">
                         <i class="fab fa-google google"></i>
                         Continue with Google
                     </a>
@@ -631,14 +631,8 @@
             });
         });
         
-        // Social registration handlers (placeholder)
-        document.querySelectorAll('.btn-social').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const provider = this.textContent.trim().split(' ')[2].toLowerCase();
-                window.SkillSwap.showNotification(`${provider} registration coming soon!`, 'info');
-            });
-        });
+        // Social registration handlers are now handled by the server-side routes
+        // No need to prevent default behavior for Google login
         
         // Real-time email validation
         const emailInput = document.getElementById('email');
