@@ -620,232 +620,13 @@
         }
     }
     
-    /* Swap Request Styles */
-    .swap-requests-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-    
-    .swap-request-card {
-        background: var(--bg-glass);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--border-color);
-        border-radius: 15px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .swap-request-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-heavy);
-    }
-    
-    .swap-details {
-        margin-top: 1rem;
-    }
-    
-    .swap-skills {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .skill-label {
-        display: block;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-bottom: 0.5rem;
-    }
-    
-    .request-message {
-        background: var(--bg-secondary);
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        border-left: 3px solid var(--border-color);
-    }
-    
-    .request-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-    
-    .request-date {
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-        margin-top: 0.25rem;
-    }
-    
-    .request-date i {
-        margin-right: 0.25rem;
-        color: var(--accent-color);
-    }
-    
-    .request-status {
-        margin-top: 0.5rem;
-    }
-    
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-    
-    .status-badge i {
-        margin-right: 0.25rem;
-    }
-    
-    .status-pending {
-        background: rgba(245, 158, 11, 0.1);
-        color: #f59e0b;
-        border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-    
-    .status-accepted {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--accent-color);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-    
-    .status-rejected {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-        border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-    
-    .no-requests {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: var(--text-secondary);
-        border: 2px dashed var(--border-color);
-        border-radius: 15px;
-        transition: all 0.3s ease;
-    }
-    
-    .no-requests:hover {
-        border-color: var(--primary-color);
-        background: rgba(79, 70, 229, 0.05);
-    }
-    
-    .no-requests i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-        color: var(--primary-color);
-    }
-    
-    .no-requests h3 {
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Feature Boxes Styles */
-    .feature-boxes {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .feature-box {
-        background: var(--bg-glass);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--border-color);
-        border-radius: 15px;
-        padding: 1.5rem;
-        text-align: center;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .feature-box::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: var(--gradient-primary);
-        opacity: 0.7;
-    }
-    
-    .feature-box:hover {
-        transform: translateY(-10px);
-        box-shadow: var(--shadow-heavy);
-    }
-    
-    .feature-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: var(--gradient-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-        color: white;
-        font-size: 1.5rem;
-    }
-    
-    .feature-box h3 {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 0.75rem;
-    }
-    
-    .feature-box p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-        flex-grow: 1;
-    }
-    
-    .feature-link {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5rem 1.25rem;
-        background: var(--gradient-primary);
-        color: white;
-        border-radius: 30px;
-        font-weight: 500;
-        font-size: 0.9rem;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-    
-    .feature-link:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
-        color: white;
-    }
-    
-    @media (max-width: 1200px) {
-        .feature-boxes {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
     @media (max-width: 768px) {
         .dashboard-container {
             padding: 1rem 0;
         }
         
         .dashboard-header,
+        .search-section,
         .section-card {
             padding: 1.5rem;
         }
@@ -860,13 +641,12 @@
             grid-template-columns: repeat(2, 1fr);
         }
         
-        .swap-skills {
-            grid-template-columns: 1fr;
+        .search-filters {
+            flex-direction: column;
         }
         
-        .feature-boxes {
-            grid-template-columns: 1fr;
-            gap: 1rem;
+        .filter-select {
+            width: 100%;
         }
     }
 </style>
@@ -902,40 +682,57 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Feature Boxes -->
-        <div class="feature-boxes fade-in">
-            <div class="feature-box">
-                <div class="feature-icon">
-                    <i class="fas fa-exchange-alt"></i>
-                </div>
-                <h3>Skill Swapping</h3>
-                <p>Exchange your skills with others in the community</p>
-                <a href="{{ url_for('main.browse') }}" class="feature-link">Find Partners</a>
+
+        <!-- Search Section -->
+        <div class="search-section fade-in">
+            <div class="search-header">
+                <h2 class="search-title">
+                    <i class="fas fa-search"></i>
+                    Find Your Perfect Skill Match
+                </h2>
             </div>
-            <div class="feature-box">
-                <div class="feature-icon">
-                    <i class="fas fa-calendar-check"></i>
+            
+            <form class="search-form" id="searchForm">
+                <div class="search-input-group">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" 
+                           class="search-input" 
+                           id="searchInput"
+                           placeholder="Search for skills, users, or keywords..."
+                           autocomplete="off">
                 </div>
-                <h3>Manage Skills</h3>
-                <p>Add or remove skills you want to offer or learn</p>
-                <a href="{{ url_for('main.manage_skills') }}" class="feature-link">Manage Skills</a>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">
-                    <i class="fas fa-certificate"></i>
-                </div>
-                <h3>Your Profile</h3>
-                <p>Update your profile information and preferences</p>
-                <a href="{{ url_for('main.profile') }}" class="feature-link">View Profile</a>
-            </div>
-            <div class="feature-box">
-                <div class="feature-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h3>Active Swaps</h3>
-                <p>View and manage your ongoing skill swap requests</p>
-                <a href="{{ url_for('main.swap_list') }}" class="feature-link">View Swaps</a>
+                <button type="submit" class="search-btn glow-effect">
+                    <i class="fas fa-search me-2"></i>
+                    Search
+                </button>
+            </form>
+            
+            <div class="search-filters">
+                <select class="filter-select" id="skillFilter">
+                    <option value="">All Skills</option>
+                    <option value="programming">Programming</option>
+                    <option value="design">Design</option>
+                    <option value="languages">Languages</option>
+                    <option value="music">Music</option>
+                    <option value="sports">Sports</option>
+                    <option value="cooking">Cooking</option>
+                    <option value="photography">Photography</option>
+                </select>
+                
+                <select class="filter-select" id="availabilityFilter">
+                    <option value="">Any Availability</option>
+                    <option value="weekends">Weekends</option>
+                    <option value="evenings">Evenings</option>
+                    <option value="weekdays">Weekdays</option>
+                    <option value="flexible">Flexible</option>
+                </select>
+                
+                <select class="filter-select" id="locationFilter">
+                    <option value="">Any Location</option>
+                    <option value="online">Online Only</option>
+                    <option value="local">Local Area</option>
+                    <option value="remote">Remote</option>
+                </select>
             </div>
         </div>
 
@@ -943,176 +740,18 @@
         <div class="content-grid">
             <!-- Main Content -->
             <div class="main-content">
-                <!-- Received Swap Requests Section -->
+                <!-- User Matches Section -->
                 <div class="section-card fade-in">
                     <h2 class="section-title">
-                        <i class="fas fa-inbox" style="color: var(--primary-color);"></i>
-                        Received Swap Requests
+                        <i class="fas fa-users" style="color: var(--accent-color);"></i>
+                        Recommended Matches
                     </h2>
                     
-                    <div class="swap-requests-container">
-                        {% if received_requests %}
-                            {% for request in received_requests %}
-                            <div class="swap-request-card">
-                                <div class="user-info">
-                                    {% if request.requester.avatar %}
-                                    <img src="{{ request.requester.avatar }}" alt="{{ request.requester.name }}" class="user-avatar">
-                                    {% else %}
-                                    <div class="user-avatar-placeholder">{{ request.requester.name[0] }}</div>
-                                    {% endif %}
-                                    <div class="user-details">
-                                        <h4>{{ request.requester.name }}</h4>
-                                        <div class="request-date">
-                                            <i class="fas fa-calendar-alt"></i>
-                                            {{ request.created_at.strftime('%B %d, %Y') }}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="swap-details">
-                                    <div class="swap-skills">
-                                        <div class="offered-skill">
-                                            <span class="skill-label">They offer:</span>
-                                            <div class="skill-tags">
-                                                {% for skill in request.offered_skills %}
-                                                <span class="skill-tag">{{ skill.name }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        <div class="wanted-skill">
-                                            <span class="skill-label">They want:</span>
-                                            <div class="skill-tags">
-                                                {% for skill in request.wanted_skills %}
-                                                <span class="skill-tag">{{ skill.name }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="request-message">
-                                        <p>{{ request.message }}</p>
-                                    </div>
-                                    
-                                    <div class="request-actions">
-                                        <form action="{{ url_for('main.respond_to_request', request_id=request.id, action='accept') }}" method="post" class="d-inline">
-                                            <button type="submit" class="btn-primary-small btn-small">
-                                                <i class="fas fa-check"></i>
-                                                Accept
-                                            </button>
-                                        </form>
-                                        <form action="{{ url_for('main.respond_to_request', request_id=request.id, action='reject') }}" method="post" class="d-inline">
-                                            <button type="submit" class="btn-outline-small btn-small">
-                                                <i class="fas fa-times"></i>
-                                                Decline
-                                            </button>
-                                        </form>
-                                        <a href="{{ url_for('main.public_profile', user_id=request.requester.id) }}" class="btn-outline-small btn-small">
-                                            <i class="fas fa-user"></i>
-                                            View Profile
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="no-requests">
-                                <i class="fas fa-inbox-in"></i>
-                                <h3>No Incoming Requests</h3>
-                                <p>You don't have any swap requests at the moment.</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <!-- Sent Swap Requests Section -->
-                <div class="section-card fade-in">
-                    <h2 class="section-title">
-                        <i class="fas fa-paper-plane" style="color: var(--accent-color);"></i>
-                        Sent Swap Requests
-                    </h2>
-                    
-                    <div class="swap-requests-container">
-                        {% if sent_requests %}
-                            {% for request in sent_requests %}
-                            <div class="swap-request-card">
-                                <div class="user-info">
-                                    {% if request.receiver.avatar %}
-                                    <img src="{{ request.receiver.avatar }}" alt="{{ request.receiver.name }}" class="user-avatar">
-                                    {% else %}
-                                    <div class="user-avatar-placeholder">{{ request.receiver.name[0] }}</div>
-                                    {% endif %}
-                                    <div class="user-details">
-                                        <h4>{{ request.receiver.name }}</h4>
-                                        <div class="request-date">
-                                            <i class="fas fa-calendar-alt"></i>
-                                            {{ request.created_at.strftime('%B %d, %Y') }}
-                                        </div>
-                                        <div class="request-status">
-                                            {% if request.status == 'pending' %}
-                                            <span class="status-badge status-pending">
-                                                <i class="fas fa-clock"></i> Pending
-                                            </span>
-                                            {% elif request.status == 'accepted' %}
-                                            <span class="status-badge status-accepted">
-                                                <i class="fas fa-check"></i> Accepted
-                                            </span>
-                                            {% elif request.status == 'rejected' %}
-                                            <span class="status-badge status-rejected">
-                                                <i class="fas fa-times"></i> Declined
-                                            </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="swap-details">
-                                    <div class="swap-skills">
-                                        <div class="offered-skill">
-                                            <span class="skill-label">You offer:</span>
-                                            <div class="skill-tags">
-                                                {% for skill in request.offered_skills %}
-                                                <span class="skill-tag">{{ skill.name }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        <div class="wanted-skill">
-                                            <span class="skill-label">You want:</span>
-                                            <div class="skill-tags">
-                                                {% for skill in request.wanted_skills %}
-                                                <span class="skill-tag">{{ skill.name }}</span>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="request-message">
-                                        <p>{{ request.message }}</p>
-                                    </div>
-                                    
-                                    <div class="request-actions">
-                                        {% if request.status == 'pending' %}
-                                        <form action="{{ url_for('main.cancel_request', request_id=request.id) }}" method="post" class="d-inline">
-                                            <button type="submit" class="btn-outline-small btn-small">
-                                                <i class="fas fa-ban"></i>
-                                                Cancel Request
-                                            </button>
-                                        </form>
-                                        {% endif %}
-                                        <a href="{{ url_for('main.public_profile', user_id=request.receiver.id) }}" class="btn-outline-small btn-small">
-                                            <i class="fas fa-user"></i>
-                                            View Profile
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="no-requests">
-                                <i class="fas fa-paper-plane"></i>
-                                <h3>No Sent Requests</h3>
-                                <p>You haven't sent any swap requests yet.</p>
-                            </div>
-                        {% endif %}
+                    <div class="user-matches" id="userMatches">
+                        <!-- Loading skeletons will be shown initially -->
+                        <div class="loading-skeleton"></div>
+                        <div class="loading-skeleton"></div>
+                        <div class="loading-skeleton"></div>
                     </div>
                 </div>
             </div>
@@ -1240,6 +879,240 @@
 {% block additional_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const userMatches = document.getElementById('userMatches');
+        const skillFilter = document.getElementById('skillFilter');
+        const availabilityFilter = document.getElementById('availabilityFilter');
+        const locationFilter = document.getElementById('locationFilter');
+        
+        // Sample user data (replace with actual API call)
+        const sampleUsers = [
+            {
+                id: 1,
+                name: "Alex Chen",
+                location: "San Francisco, CA",
+                avatar: null,
+                skills: ["JavaScript", "React", "Node.js"],
+                availability: "evenings",
+                rating: 4.8
+            },
+            {
+                id: 2,
+                name: "Maria Garcia",
+                location: "Barcelona, Spain",
+                avatar: null,
+                skills: ["Graphic Design", "Photoshop", "Illustrator"],
+                availability: "weekends",
+                rating: 4.9
+            },
+            {
+                id: 3,
+                name: "David Kim",
+                location: "Seoul, Korea",
+                avatar: null,
+                skills: ["Python", "Machine Learning", "Data Science"],
+                availability: "flexible",
+                rating: 4.7
+            },
+            {
+                id: 4,
+                name: "Sophie Wilson",
+                location: "London, UK",
+                avatar: null,
+                skills: ["French", "Spanish", "Italian"],
+                availability: "weekdays",
+                rating: 5.0
+            },
+            {
+                id: 5,
+                name: "Carlos Rodriguez",
+                location: "Mexico City, Mexico",
+                avatar: null,
+                skills: ["Guitar", "Music Theory", "Songwriting"],
+                availability: "evenings",
+                rating: 4.6
+            },
+            {
+                id: 6,
+                name: "Priya Patel",
+                location: "Mumbai, India",
+                avatar: null,
+                skills: ["Yoga", "Meditation", "Wellness"],
+                availability: "weekends",
+                rating: 4.9
+            }
+        ];
+        
+        // Function to create user card HTML
+        function createUserCard(user) {
+            const avatar = user.avatar 
+                ? `<img src="${user.avatar}" alt="${user.name}" class="user-avatar">`
+                : `<div class="user-avatar-placeholder">${user.name[0]}</div>`;
+            
+            const skillTags = user.skills.map(skill => 
+                `<span class="skill-tag">${skill}</span>`
+            ).join('');
+            
+            const stars = '★'.repeat(Math.floor(user.rating)) + '☆'.repeat(5 - Math.floor(user.rating));
+            
+            return `
+                <div class="user-card glow-effect" onclick="viewUserProfile(${user.id})">
+                    <div class="user-info">
+                        ${avatar}
+                        <div class="user-details">
+                            <h4>${user.name}</h4>
+                            <div class="user-meta">
+                                <i class="fas fa-map-marker-alt"></i>
+                                ${user.location}
+                                <span class="ms-2">
+                                    <i class="fas fa-star"></i>
+                                    ${user.rating}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="user-skills">
+                        <div class="skill-tags">
+                            ${skillTags}
+                        </div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn-primary-small btn-small" onclick="event.stopPropagation(); requestSwap(${user.id})">
+                            <i class="fas fa-handshake"></i>
+                            Request Swap
+                        </button>
+                        <button class="btn-outline-small btn-small" onclick="event.stopPropagation(); viewUserProfile(${user.id})">
+                            <i class="fas fa-eye"></i>
+                            View Profile
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Function to display users with animation
+        function displayUsers(users, animate = true) {
+            if (users.length === 0) {
+                userMatches.innerHTML = `
+                    <div class="no-results" style="grid-column: 1 / -1;">
+                        <i class="fas fa-search"></i>
+                        <h3>No matches found</h3>
+                        <p>Try adjusting your search criteria or filters.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (animate) {
+                // Clear current content
+                userMatches.innerHTML = '';
+                
+                // Add users with staggered animation
+                users.forEach((user, index) => {
+                    setTimeout(() => {
+                        const userCard = document.createElement('div');
+                        userCard.innerHTML = createUserCard(user);
+                        userCard.firstElementChild.style.opacity = '0';
+                        userCard.firstElementChild.style.transform = 'translateY(30px)';
+                        
+                        userMatches.appendChild(userCard.firstElementChild);
+                        
+                        // Trigger animation
+                        setTimeout(() => {
+                            userCard.firstElementChild.style.transition = 'all 0.5s ease';
+                            userCard.firstElementChild.style.opacity = '1';
+                            userCard.firstElementChild.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, index * 150);
+                });
+            } else {
+                userMatches.innerHTML = users.map(createUserCard).join('');
+            }
+        }
+        
+        // Function to filter users
+        function filterUsers() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const skillFilterValue = skillFilter.value.toLowerCase();
+            const availabilityFilterValue = availabilityFilter.value.toLowerCase();
+            const locationFilterValue = locationFilter.value.toLowerCase();
+            
+            const filtered = sampleUsers.filter(user => {
+                const matchesSearch = !searchTerm || 
+                    user.name.toLowerCase().includes(searchTerm) ||
+                    user.skills.some(skill => skill.toLowerCase().includes(searchTerm)) ||
+                    user.location.toLowerCase().includes(searchTerm);
+                
+                const matchesSkill = !skillFilterValue ||
+                    user.skills.some(skill => skill.toLowerCase().includes(skillFilterValue));
+                
+                const matchesAvailability = !availabilityFilterValue ||
+                    user.availability === availabilityFilterValue;
+                
+                const matchesLocation = !locationFilterValue ||
+                    (locationFilterValue === 'online') ||
+                    (locationFilterValue === 'local' && user.location.includes('CA')) ||
+                    (locationFilterValue === 'remote');
+                
+                return matchesSearch && matchesSkill && matchesAvailability && matchesLocation;
+            });
+            
+            displayUsers(filtered, true);
+        }
+        
+        // Search form submission
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            filterUsers();
+            
+            // Add glow effect to search button
+            const searchBtn = this.querySelector('.search-btn');
+            searchBtn.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.5)';
+            setTimeout(() => {
+                searchBtn.style.boxShadow = '';
+            }, 300);
+        });
+        
+        // Real-time search
+        searchInput.addEventListener('input', window.SkillSwap.debounce(filterUsers, 300));
+        
+        // Filter change handlers
+        [skillFilter, availabilityFilter, locationFilter].forEach(filter => {
+            filter.addEventListener('change', filterUsers);
+        });
+        
+        // Global functions for user interactions
+        window.viewUserProfile = function(userId) {
+            // Add loading state
+            const userCard = event.currentTarget;
+            const originalHTML = userCard.innerHTML;
+            userCard.innerHTML = '<div class="loading-skeleton" style="height: 200px;"></div>';
+            
+            // Navigate to user profile
+            setTimeout(() => {
+                window.location.href = `/public_profile/${userId}`;
+            }, 500);
+        };
+        
+        window.requestSwap = function(userId) {
+            // Add loading state to button
+            const button = event.target;
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<span class="loading"></span>';
+            button.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                window.location.href = `/swap_request/${userId}`;
+            }, 1000);
+        };
+        
+        // Initialize with sample data
+        setTimeout(() => {
+            displayUsers(sampleUsers, true);
+        }, 1000);
+        
         // Animate statistics on page load
         const statNumbers = document.querySelectorAll('.stat-number');
         const statsObserver = new IntersectionObserver((entries) => {
@@ -1269,43 +1142,39 @@
             statsObserver.observe(stat);
         });
         
-        // Add animation to swap request cards
-        const swapCards = document.querySelectorAll('.swap-request-card');
-        swapCards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + K for search focus
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+            }
             
-            setTimeout(() => {
-                card.style.transition = 'all 0.5s ease';
-                card.style.opacity = '1';
-                card.style.transform = 'translateY(0)';
-            }, 100 + (index * 100));
+            // Escape to clear search
+            if (e.key === 'Escape' && document.activeElement === searchInput) {
+                searchInput.value = '';
+                filterUsers();
+            }
         });
         
-        // Handle accept/reject buttons with confirmation
-        const actionButtons = document.querySelectorAll('.request-actions button');
-        actionButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                if (this.textContent.trim().includes('Accept') || 
-                    this.textContent.trim().includes('Decline') || 
-                    this.textContent.trim().includes('Cancel')) {
-                    
-                    const action = this.textContent.trim().includes('Accept') ? 'accept' : 
-                                  this.textContent.trim().includes('Decline') ? 'decline' : 'cancel';
-                    
-                    if (!confirm(`Are you sure you want to ${action} this request?`)) {
-                        e.preventDefault();
-                        return false;
-                    }
-                    
-                    // Add loading state
-                    const originalText = this.innerHTML;
-                    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
-                    this.disabled = true;
-                    
-                    // Form will submit normally after this
+        // Auto-complete functionality for search
+        const searchSuggestions = [
+            'JavaScript', 'Python', 'React', 'Design', 'Photography',
+            'Music', 'Guitar', 'French', 'Spanish', 'Yoga', 'Cooking'
+        ];
+        
+        searchInput.addEventListener('keyup', function(e) {
+            const value = this.value.toLowerCase();
+            if (value.length > 1) {
+                const matches = searchSuggestions.filter(suggestion => 
+                    suggestion.toLowerCase().includes(value)
+                );
+                
+                // Could implement dropdown suggestions here
+                if (matches.length > 0) {
+                    this.title = `Suggestions: ${matches.slice(0, 3).join(', ')}`;
                 }
-            });
+            }
         });
     });
 </script>
