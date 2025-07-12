@@ -1,0 +1,1286 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Skills - Skill Swap{% endblock %}
+
+{% block additional_css %}
+<style>
+    .manage-skills-container {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+    
+    .skills-header {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .skills-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+    
+    .header-content {
+        text-align: center;
+    }
+    
+    .skills-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+    
+    .skills-subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .quick-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .action-btn:hover::before {
+        left: 100%;
+    }
+    
+    .btn-primary-action {
+        background: var(--gradient-primary);
+        color: white;
+    }
+    
+    .btn-primary-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+        color: white;
+    }
+    
+    .btn-secondary-action {
+        background: var(--gradient-accent);
+        color: white;
+    }
+    
+    .btn-secondary-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        color: white;
+    }
+    
+    .action-btn i {
+        margin-right: 0.5rem;
+    }
+    
+    .skills-sections {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    .skills-section {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .skills-section:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-heavy);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-title i {
+        margin-right: 0.75rem;
+        font-size: 1.3rem;
+    }
+    
+    .offered-skills .section-title i {
+        color: var(--primary-color);
+    }
+    
+    .wanted-skills .section-title i {
+        color: var(--accent-color);
+    }
+    
+    .add-skill-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .add-skill-btn i {
+        margin-right: 0.5rem;
+    }
+    
+    .offered-skills .add-skill-btn {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+    
+    .wanted-skills .add-skill-btn {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-color);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .add-skill-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+        min-height: 100px;
+    }
+    
+    .skill-card {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    
+    .skill-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .skill-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--gradient-primary);
+        opacity: 0.05;
+        transition: left 0.3s ease;
+    }
+    
+    .skill-card:hover::before {
+        left: 0;
+    }
+    
+    .skill-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-light);
+    }
+    
+    .skill-info {
+        margin-bottom: 1rem;
+    }
+    
+    .skill-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .skill-description {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+    }
+    
+    .skill-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+    
+    .skill-level {
+        display: flex;
+        align-items: center;
+    }
+    
+    .skill-level i {
+        margin-right: 0.25rem;
+        color: var(--accent-color);
+    }
+    
+    .skill-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .skill-action-btn {
+        flex: 1;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-edit {
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary-color);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+    
+    .btn-edit:hover {
+        background: rgba(79, 70, 229, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary);
+        border: 2px dashed var(--border-color);
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .empty-state:hover {
+        border-color: var(--primary-color);
+        background: rgba(79, 70, 229, 0.05);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .offered-skills .empty-state i {
+        color: var(--primary-color);
+    }
+    
+    .wanted-skills .empty-state i {
+        color: var(--accent-color);
+    }
+    
+    .empty-state h3 {
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .modal.show {
+        display: flex;
+        opacity: 1;
+    }
+    
+    .modal-content {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+    }
+    
+    .modal.show .modal-content {
+        transform: scale(1);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 0.5rem;
+        border-radius: 50%;
+    }
+    
+    .modal-close:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        transform: rotate(90deg);
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-input,
+    .form-textarea,
+    .form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        color: var(--text-primary);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .skill-suggestions {
+        margin-top: 0.5rem;
+    }
+    
+    .suggestions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+    
+    .suggestion-btn {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        background: var(--bg-glass);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .suggestion-btn:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .level-selector {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .level-btn {
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: var(--bg-glass);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .level-btn.active {
+        background: var(--gradient-primary);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .level-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .modal-btn {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save {
+        background: var(--gradient-primary);
+        color: white;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+    }
+    
+    .btn-cancel {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+    
+    .btn-cancel:hover {
+        background: var(--bg-glass);
+        transform: translateY(-2px);
+    }
+    
+    .stats-summary {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: var(--bg-secondary);
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-light);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .skills-sections {
+            grid-template-columns: 1fr;
+        }
+        
+        .skills-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .manage-skills-container {
+            padding: 1rem 0;
+        }
+        
+        .skills-header,
+        .skills-section,
+        .stats-summary {
+            padding: 1.5rem;
+        }
+        
+        .skills-title {
+            font-size: 2rem;
+        }
+        
+        .quick-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .action-btn {
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+        }
+        
+        .section-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .modal-content {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .level-selector {
+            grid-template-columns: 1fr;
+        }
+        
+        .modal-actions {
+            flex-direction: column;
+        }
+    }
+    
+    /* Custom scrollbar for modal */
+    .modal-content::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .modal-content::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 3px;
+    }
+    
+    .modal-content::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 3px;
+    }
+    
+    .modal-content::-webkit-scrollbar-thumb:hover {
+        background: var(--secondary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="manage-skills-container">
+    <div class="container">
+        <!-- Skills Header -->
+        <div class="skills-header fade-in">
+            <div class="header-content">
+                <h1 class="skills-title">Manage Your Skills</h1>
+                <p class="skills-subtitle">Share what you know and discover what you want to learn</p>
+                
+                <div class="quick-actions">
+                    <button class="action-btn btn-primary-action" onclick="openSkillModal('offered')">
+                        <i class="fas fa-plus"></i>
+                        Add Skill to Offer
+                    </button>
+                    <button class="action-btn btn-secondary-action" onclick="openSkillModal('wanted')">
+                        <i class="fas fa-search"></i>
+                        Add Learning Goal
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Summary -->
+        <div class="stats-summary fade-in">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" id="offeredCount">{{ offered_skills|length if offered_skills else 0 }}</span>
+                    <div class="stat-label">Skills Offered</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="wantedCount">{{ wanted_skills|length if wanted_skills else 0 }}</span>
+                    <div class="stat-label">Learning Goals</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">0</span>
+                    <div class="stat-label">Active Swaps</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">5.0</span>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Skills Sections -->
+        <div class="skills-sections">
+            <!-- Skills I Offer -->
+            <div class="skills-section offered-skills fade-in">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-gift"></i>
+                        Skills I Offer
+                    </h2>
+                    <button class="add-skill-btn" onclick="openSkillModal('offered')">
+                        <i class="fas fa-plus"></i>
+                        Add Skill
+                    </button>
+                </div>
+                
+                <div class="skills-grid" id="offeredSkillsGrid">
+                    {% if offered_skills %}
+                        {% for user_skill in offered_skills %}
+                        <div class="skill-card visible" data-skill-id="{{ user_skill.id }}">
+                            <div class="skill-info">
+                                <div class="skill-name">{{ user_skill.skill.name }}</div>
+                                <div class="skill-description">
+                                    {{ user_skill.description if user_skill.description else 'Ready to share this skill with others!' }}
+                                </div>
+                                <div class="skill-meta">
+                                    <div class="skill-level">
+                                        <i class="fas fa-star"></i>
+                                        {{ user_skill.level.title() if user_skill.level else 'Intermediate' }}
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-clock"></i>
+                                        Added recently
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="skill-actions">
+                                <button class="skill-action-btn btn-edit" onclick="editSkill({{ user_skill.id }}, 'offered')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="skill-action-btn btn-delete" onclick="deleteSkill({{ user_skill.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state" onclick="openSkillModal('offered')">
+                        <i class="fas fa-gift"></i>
+                        <h3>No Skills Offered Yet</h3>
+                        <p>Share your expertise with the community!</p>
+                        <button class="action-btn btn-primary-action">
+                            <i class="fas fa-plus"></i>
+                            Add Your First Skill
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Skills I Want to Learn -->
+            <div class="skills-section wanted-skills fade-in">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-search"></i>
+                        Skills I Want to Learn
+                    </h2>
+                    <button class="add-skill-btn" onclick="openSkillModal('wanted')">
+                        <i class="fas fa-plus"></i>
+                        Add Goal
+                    </button>
+                </div>
+                
+                <div class="skills-grid" id="wantedSkillsGrid">
+                    {% if wanted_skills %}
+                        {% for user_skill in wanted_skills %}
+                        <div class="skill-card visible" data-skill-id="{{ user_skill.id }}">
+                            <div class="skill-info">
+                                <div class="skill-name">{{ user_skill.skill.name }}</div>
+                                <div class="skill-description">
+                                    {{ user_skill.description if user_skill.description else 'Eager to learn this skill!' }}
+                                </div>
+                                <div class="skill-meta">
+                                    <div class="skill-level">
+                                        <i class="fas fa-target"></i>
+                                        Goal: {{ user_skill.level.title() if user_skill.level else 'Beginner' }}
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-clock"></i>
+                                        Added recently
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="skill-actions">
+                                <button class="skill-action-btn btn-edit" onclick="editSkill({{ user_skill.id }}, 'wanted')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="skill-action-btn btn-delete" onclick="deleteSkill({{ user_skill.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-state" onclick="openSkillModal('wanted')">
+                        <i class="fas fa-search"></i>
+                        <h3>No Learning Goals Yet</h3>
+                        <p>Discover new skills you'd like to master!</p>
+                        <button class="action-btn btn-secondary-action">
+                            <i class="fas fa-plus"></i>
+                            Add Learning Goal
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Skill Modal -->
+<div class="modal" id="skillModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Add New Skill</h2>
+            <button class="modal-close" onclick="closeSkillModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="skillForm">
+            <div class="form-group">
+                <label class="form-label" for="skillName">Skill Name</label>
+                <input type="text" 
+                       class="form-input" 
+                       id="skillName" 
+                       name="skillName" 
+                       placeholder="e.g., JavaScript, Guitar, French, Cooking..." 
+                       required>
+                
+                <div class="skill-suggestions">
+                    <div class="suggestions-grid" id="skillSuggestions">
+                        <!-- Suggestions will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="skillDescription">Description (Optional)</label>
+                <textarea class="form-textarea" 
+                          id="skillDescription" 
+                          name="skillDescription" 
+                          placeholder="Describe your experience with this skill or what you hope to learn..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Skill Level</label>
+                <div class="level-selector">
+                    <button type="button" class="level-btn" data-level="beginner">
+                        <i class="fas fa-seedling"></i>
+                        Beginner
+                    </button>
+                    <button type="button" class="level-btn active" data-level="intermediate">
+                        <i class="fas fa-chart-line"></i>
+                        Intermediate
+                    </button>
+                    <button type="button" class="level-btn" data-level="advanced">
+                        <i class="fas fa-star"></i>
+                        Advanced
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="skillCategory">Category</label>
+                <select class="form-select" id="skillCategory" name="skillCategory">
+                    <option value="">Select a category</option>
+                    <option value="programming">Programming & Tech</option>
+                    <option value="design">Design & Creative</option>
+                    <option value="languages">Languages</option>
+                    <option value="music">Music & Arts</option>
+                    <option value="sports">Sports & Fitness</option>
+                    <option value="cooking">Cooking & Food</option>
+                    <option value="photography">Photography</option>
+                    <option value="business">Business & Marketing</option>
+                    <option value="crafts">Arts & Crafts</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="modal-btn btn-cancel" onclick="closeSkillModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="modal-btn btn-save">
+                    <i class="fas fa-save"></i>
+                    Save Skill
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const skillModal = document.getElementById('skillModal');
+        const skillForm = document.getElementById('skillForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const skillName = document.getElementById('skillName');
+        const skillDescription = document.getElementById('skillDescription');
+        const skillCategory = document.getElementById('skillCategory');
+        const skillSuggestions = document.getElementById('skillSuggestions');
+        const levelButtons = document.querySelectorAll('.level-btn');
+        const offeredSkillsGrid = document.getElementById('offeredSkillsGrid');
+        const wantedSkillsGrid = document.getElementById('wantedSkillsGrid');
+        const offeredCount = document.getElementById('offeredCount');
+        const wantedCount = document.getElementById('wantedCount');
+        
+        // State
+        let currentSkillType = 'offered';
+        let currentSkillId = null;
+        let selectedLevel = 'intermediate';
+        
+        // Popular skills suggestions
+        const skillSuggestionsData = {
+            programming: ['JavaScript', 'Python', 'React', 'Node.js', 'Java', 'C++', 'HTML/CSS', 'SQL'],
+            design: ['Photoshop', 'Illustrator', 'Figma', 'Sketch', 'InDesign', 'UX Design', 'Web Design', 'Logo Design'],
+            languages: ['Spanish', 'French', 'German', 'Japanese', 'Chinese', 'Italian', 'Portuguese', 'Arabic'],
+            music: ['Guitar', 'Piano', 'Violin', 'Drums', 'Singing', 'Music Theory', 'Songwriting', 'DJ'],
+            sports: ['Yoga', 'Swimming', 'Tennis', 'Basketball', 'Football', 'Running', 'Martial Arts', 'Gym Training'],
+            cooking: ['Italian Cuisine', 'Baking', 'Pastry', 'Vegan Cooking', 'BBQ', 'Wine Pairing', 'Knife Skills', 'Food Photography'],
+            photography: ['Portrait Photography', 'Landscape Photography', 'Photo Editing', 'Lightroom', 'Wedding Photography', 'Street Photography'],
+            business: ['Digital Marketing', 'Social Media', 'Sales', 'Project Management', 'Public Speaking', 'Leadership', 'Excel'],
+            crafts: ['Painting', 'Drawing', 'Pottery', 'Knitting', 'Woodworking', 'Jewelry Making', 'Calligraphy', 'Origami']
+        };
+        
+        // Global functions
+        window.openSkillModal = function(type) {
+            currentSkillType = type;
+            currentSkillId = null;
+            
+            modalTitle.textContent = type === 'offered' ? 'Add Skill to Offer' : 'Add Learning Goal';
+            skillForm.reset();
+            selectedLevel = 'intermediate';
+            updateLevelButtons();
+            updateSkillSuggestions();
+            
+            skillModal.classList.add('show');
+            skillName.focus();
+        };
+        
+        window.closeSkillModal = function() {
+            skillModal.classList.remove('show');
+        };
+        
+        window.editSkill = function(skillId, type) {
+            currentSkillId = skillId;
+            currentSkillType = type;
+            
+            modalTitle.textContent = type === 'offered' ? 'Edit Offered Skill' : 'Edit Learning Goal';
+            
+            // Find skill card and populate form
+            const skillCard = document.querySelector(`[data-skill-id="${skillId}"]`);
+            if (skillCard) {
+                const skillNameText = skillCard.querySelector('.skill-name').textContent;
+                const skillDescriptionText = skillCard.querySelector('.skill-description').textContent;
+                const skillLevelText = skillCard.querySelector('.skill-level').textContent.toLowerCase();
+                
+                skillName.value = skillNameText;
+                skillDescription.value = skillDescriptionText;
+                
+                // Set level based on text content
+                if (skillLevelText.includes('beginner')) {
+                    selectedLevel = 'beginner';
+                } else if (skillLevelText.includes('advanced')) {
+                    selectedLevel = 'advanced';
+                } else {
+                    selectedLevel = 'intermediate';
+                }
+                
+                updateLevelButtons();
+            }
+            
+            skillModal.classList.add('show');
+            skillName.focus();
+        };
+        
+        window.deleteSkill = function(skillId) {
+            if (confirm('Are you sure you want to delete this skill?')) {
+                const skillCard = document.querySelector(`[data-skill-id="${skillId}"]`);
+                if (skillCard) {
+                    // Add fade out animation
+                    skillCard.style.transition = 'all 0.3s ease';
+                    skillCard.style.opacity = '0';
+                    skillCard.style.transform = 'translateY(-20px)';
+                    
+                    setTimeout(() => {
+                        skillCard.remove();
+                        updateSkillCounts();
+                        
+                        // Show empty state if no skills left
+                        const grid = skillCard.closest('.skills-grid');
+                        if (grid.children.length === 0) {
+                            const section = grid.closest('.skills-section');
+                            const isOffered = section.classList.contains('offered-skills');
+                            showEmptyState(grid, isOffered);
+                        }
+                        
+                        window.SkillSwap.showNotification('Skill deleted successfully!', 'success');
+                    }, 300);
+                }
+            }
+        };
+        
+        // Level button handlers
+        levelButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                selectedLevel = this.dataset.level;
+                updateLevelButtons();
+            });
+        });
+        
+        function updateLevelButtons() {
+            levelButtons.forEach(button => {
+                button.classList.toggle('active', button.dataset.level === selectedLevel);
+            });
+        }
+        
+        // Skill suggestions
+        skillCategory.addEventListener('change', updateSkillSuggestions);
+        
+        skillName.addEventListener('input', function() {
+            const value = this.value.toLowerCase();
+            if (value.length > 1) {
+                const allSkills = Object.values(skillSuggestionsData).flat();
+                const matches = allSkills.filter(skill => 
+                    skill.toLowerCase().includes(value)
+                ).slice(0, 8);
+                
+                if (matches.length > 0) {
+                    displaySuggestions(matches);
+                } else {
+                    skillSuggestions.innerHTML = '';
+                }
+            } else {
+                updateSkillSuggestions();
+            }
+        });
+        
+        function updateSkillSuggestions() {
+            const category = skillCategory.value;
+            const suggestions = category ? skillSuggestionsData[category] || [] : 
+                               Object.values(skillSuggestionsData).flat().slice(0, 12);
+            
+            displaySuggestions(suggestions);
+        }
+        
+        function displaySuggestions(suggestions) {
+            skillSuggestions.innerHTML = suggestions.map(skill => 
+                `<button type="button" class="suggestion-btn" onclick="selectSuggestion('${skill}')">${skill}</button>`
+            ).join('');
+        }
+        
+        window.selectSuggestion = function(skill) {
+            skillName.value = skill;
+            skillDescription.focus();
+        };
+        
+        // Form submission
+        skillForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: skillName.value.trim(),
+                description: skillDescription.value.trim(),
+                level: selectedLevel,
+                category: skillCategory.value,
+                type: currentSkillType
+            };
+            
+            if (!formData.name) {
+                window.SkillSwap.showNotification('Please enter a skill name', 'error');
+                skillName.focus();
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = this.querySelector('.btn-save');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="loading"></span> Saving...';
+            submitBtn.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                if (currentSkillId) {
+                    updateSkillCard(currentSkillId, formData);
+                    window.SkillSwap.showNotification('Skill updated successfully!', 'success');
+                } else {
+                    addSkillCard(formData);
+                    window.SkillSwap.showNotification('Skill added successfully!', 'success');
+                }
+                
+                closeSkillModal();
+                submitBtn.innerHTML = originalHTML;
+                submitBtn.disabled = false;
+                updateSkillCounts();
+            }, 1000);
+        });
+        
+        function addSkillCard(skillData) {
+            const targetGrid = skillData.type === 'offered' ? offeredSkillsGrid : wantedSkillsGrid;
+            
+            // Remove empty state if it exists
+            const emptyState = targetGrid.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const skillId = Date.now(); // Generate temporary ID
+            const skillCard = createSkillCard(skillId, skillData);
+            
+            targetGrid.appendChild(skillCard);
+            
+            // Trigger animation
+            setTimeout(() => {
+                skillCard.classList.add('visible');
+            }, 50);
+        }
+        
+        function updateSkillCard(skillId, skillData) {
+            const skillCard = document.querySelector(`[data-skill-id="${skillId}"]`);
+            if (skillCard) {
+                skillCard.querySelector('.skill-name').textContent = skillData.name;
+                skillCard.querySelector('.skill-description').textContent = 
+                    skillData.description || (skillData.type === 'offered' ? 
+                        'Ready to share this skill with others!' : 
+                        'Eager to learn this skill!');
+                
+                const levelText = skillData.type === 'offered' ? 
+                    skillData.level.charAt(0).toUpperCase() + skillData.level.slice(1) :
+                    `Goal: ${skillData.level.charAt(0).toUpperCase() + skillData.level.slice(1)}`;
+                
+                skillCard.querySelector('.skill-level').innerHTML = 
+                    `<i class="fas fa-${skillData.type === 'offered' ? 'star' : 'target'}"></i>${levelText}`;
+            }
+        }
+        
+        function createSkillCard(skillId, skillData) {
+            const skillCard = document.createElement('div');
+            skillCard.className = 'skill-card';
+            skillCard.setAttribute('data-skill-id', skillId);
+            
+            const levelIcon = skillData.type === 'offered' ? 'star' : 'target';
+            const levelText = skillData.type === 'offered' ? 
+                skillData.level.charAt(0).toUpperCase() + skillData.level.slice(1) :
+                `Goal: ${skillData.level.charAt(0).toUpperCase() + skillData.level.slice(1)}`;
+            
+            skillCard.innerHTML = `
+                <div class="skill-info">
+                    <div class="skill-name">${skillData.name}</div>
+                    <div class="skill-description">
+                        ${skillData.description || (skillData.type === 'offered' ? 
+                            'Ready to share this skill with others!' : 
+                            'Eager to learn this skill!')}
+                    </div>
+                    <div class="skill-meta">
+                        <div class="skill-level">
+                            <i class="fas fa-${levelIcon}"></i>
+                            ${levelText}
+                        </div>
+                        <div>
+                            <i class="fas fa-clock"></i>
+                            Just added
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-actions">
+                    <button class="skill-action-btn btn-edit" onclick="editSkill(${skillId}, '${skillData.type}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="skill-action-btn btn-delete" onclick="deleteSkill(${skillId})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            return skillCard;
+        }
+        
+        function showEmptyState(grid, isOffered) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            emptyState.onclick = () => openSkillModal(isOffered ? 'offered' : 'wanted');
+            
+            emptyState.innerHTML = `
+                <i class="fas fa-${isOffered ? 'gift' : 'search'}"></i>
+                <h3>${isOffered ? 'No Skills Offered Yet' : 'No Learning Goals Yet'}</h3>
+                <p>${isOffered ? 'Share your expertise with the community!' : 'Discover new skills you\'d like to master!'}</p>
+                <button class="action-btn ${isOffered ? 'btn-primary-action' : 'btn-secondary-action'}">
+                    <i class="fas fa-plus"></i>
+                    ${isOffered ? 'Add Your First Skill' : 'Add Learning Goal'}
+                </button>
+            `;
+            
+            grid.appendChild(emptyState);
+        }
+        
+        function updateSkillCounts() {
+            const offeredCards = offeredSkillsGrid.querySelectorAll('.skill-card:not(.empty-state)');
+            const wantedCards = wantedSkillsGrid.querySelectorAll('.skill-card:not(.empty-state)');
+            
+            offeredCount.textContent = offeredCards.length;
+            wantedCount.textContent = wantedCards.length;
+        }
+        
+        // Close modal on outside click
+        skillModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSkillModal();
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && skillModal.classList.contains('show')) {
+                closeSkillModal();
+            }
+        });
+        
+        // Initialize skill suggestions
+        updateSkillSuggestions();
+        
+        // Animate existing skill cards
+        document.querySelectorAll('.skill-card').forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('visible');
+            }, index * 100);
+        });
+        
+        // Animate stats on load
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach(stat => {
+            const finalValue = parseInt(stat.textContent) || 0;
+            let currentValue = 0;
+            const increment = finalValue / 20;
+            
+            const counter = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= finalValue) {
+                    stat.textContent = finalValue;
+                    clearInterval(counter);
+                } else {
+                    stat.textContent = Math.floor(currentValue);
+                }
+            }, 50);
+        });
+    });
+</script>
+{% endblock %}
