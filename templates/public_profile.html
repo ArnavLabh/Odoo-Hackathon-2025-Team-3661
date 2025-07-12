@@ -379,7 +379,7 @@
             </div>
             
             <div class="profile-actions">
-                <a href="{{ url_for('main.swap_request', user_id=user.id) }}" class="btn btn-primary">
+                <a href="{{ url_for('main.swap_request_form', to_user_id=user.id) }}" class="btn btn-primary">
                     <i class="fas fa-handshake me-2"></i>
                     Request Skill Swap
                 </a>
@@ -491,7 +491,7 @@
                         Request Swap
                     </h2>
                     
-                    <form action="{{ url_for('main.swap_request', user_id=user.id) }}" method="post" class="swap-form">
+                    <form action="{{ url_for('swaps.request_swap', to_user_id=user.id) }}" method="post" class="swap-form">
                         <div class="form-group">
                             <label for="offered_skill" class="form-label">I can teach:</label>
                             <select name="offered_skill" id="offered_skill" class="form-control" required>
