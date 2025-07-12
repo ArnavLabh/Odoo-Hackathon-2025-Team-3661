@@ -1,40 +1,448 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Skill Swap Platform{% endblock %}
+{% block title %}Login - Skill Swap{% endblock %}
+
+{% block additional_css %}
+<style>
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+    
+    .auth-card {
+        max-width: 450px;
+        width: 100%;
+        margin: 0 auto;
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        box-shadow: var(--shadow-heavy);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--gradient-primary);
+    }
+    
+    .auth-header {
+        text-align: center;
+        padding: 2rem 2rem 1rem;
+    }
+    
+    .auth-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .auth-header p {
+        color: var(--text-secondary);
+        margin-bottom: 0;
+    }
+    
+    .auth-body {
+        padding: 1rem 2rem 2rem;
+    }
+    
+    .form-floating {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-floating input {
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-size: 1rem;
+        padding: 1rem 0.75rem 0.25rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-floating input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        outline: none;
+        transform: translateY(-2px);
+    }
+    
+    .form-floating label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-floating input:focus ~ label,
+    .form-floating input:not(:placeholder-shown) ~ label {
+        color: var(--primary-color);
+        transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+    
+    .btn-auth {
+        width: 100%;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        background: var(--gradient-primary);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-auth::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .btn-auth:hover::before {
+        left: 100%;
+    }
+    
+    .btn-auth:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+    }
+    
+    .btn-auth:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-color);
+    }
+    
+    .auth-divider span {
+        padding: 0 1rem;
+    }
+    
+    .auth-footer {
+        text-align: center;
+        padding: 1rem 2rem 2rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-secondary);
+    }
+    
+    .auth-footer p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+    
+    .auth-footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    
+    .auth-footer a:hover {
+        color: var(--secondary-color);
+    }
+    
+    .forgot-password {
+        text-align: right;
+        margin-bottom: 1.5rem;
+    }
+    
+    .forgot-password a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.3s ease;
+    }
+    
+    .forgot-password a:hover {
+        color: var(--primary-color);
+    }
+    
+    .social-login {
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-social {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-glass);
+        backdrop-filter: blur(20px);
+        color: var(--text-primary);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-social:hover {
+        background: var(--bg-secondary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-light);
+        color: var(--text-primary);
+    }
+    
+    .btn-social i {
+        margin-right: 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .google { color: #db4437; }
+    .github { color: #333; }
+    .linkedin { color: #0077b5; }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+    
+    [data-theme="dark"] .loading-overlay {
+        background: rgba(15, 23, 42, 0.9);
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-size: 1rem;
+        z-index: 5;
+    }
+    
+    .password-toggle:hover {
+        color: var(--primary-color);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center">
-                <h4><i class="fas fa-sign-in-alt"></i> Welcome Back</h4>
+<div class="auth-container">
+    <div class="container">
+        <div class="auth-card fade-in">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading"></div>
             </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+            
+            <div class="auth-header">
+                <h1 data-translate="login">Login</h1>
+                <p>Welcome back! Please sign in to your account</p>
+            </div>
+            
+            <div class="auth-body">
+                <!-- Social Login Options -->
+                <div class="social-login">
+                    <a href="#" class="btn-social">
+                        <i class="fab fa-google google"></i>
+                        Continue with Google
+                    </a>
+                    <a href="#" class="btn-social">
+                        <i class="fab fa-github github"></i>
+                        Continue with GitHub
+                    </a>
+                </div>
+                
+                <div class="auth-divider">
+                    <span data-translate="or">or</span>
+                </div>
+                
+                <!-- Login Form -->
+                <form method="POST" id="loginForm" novalidate>
+                    <div class="form-floating">
+                        <input type="email" 
+                               class="form-control" 
+                               id="email" 
+                               name="email" 
+                               placeholder="Email address" 
+                               required 
+                               autocomplete="email">
+                        <label for="email" data-translate="email">Email address</label>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-sign-in-alt"></i> Login
+                    <div class="form-floating" style="position: relative;">
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password" 
+                               placeholder="Password" 
+                               required 
+                               autocomplete="current-password">
+                        <label for="password" data-translate="password">Password</label>
+                        <button type="button" class="password-toggle" id="passwordToggle">
+                            <i class="fas fa-eye"></i>
                         </button>
                     </div>
+                    
+                    <div class="forgot-password">
+                        <a href="#">Forgot your password?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn-auth" id="loginBtn" data-translate="sign-in">
+                        Sign In
+                    </button>
                 </form>
-                
-                <div class="text-center mt-3">
-                    <p>Don't have an account? 
-                        <a href="{{ url_for('main.register') }}">Register here</a>
-                    </p>
-                </div>
+            </div>
+            
+            <div class="auth-footer">
+                <p>
+                    <span data-translate="dont-have-account">Don't have an account?</span>
+                    <a href="{{ url_for('main.register') }}" data-translate="sign-up">Sign up</a>
+                </p>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordInput = document.getElementById('password');
+        
+        // Password toggle functionality
+        passwordToggle.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+        });
+        
+        // Form submission
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            loadingOverlay.style.display = 'flex';
+            const removeLoading = window.SkillSwap.addLoadingState(loginBtn);
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Submit form (simulate async request)
+            fetch(this.action || window.location.pathname, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.text();
+                }
+            })
+            .then(html => {
+                if (html) {
+                    // If there's HTML content, it means there was an error
+                    document.documentElement.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.SkillSwap.showNotification('An error occurred. Please try again.', 'error');
+            })
+            .finally(() => {
+                loadingOverlay.style.display = 'none';
+                removeLoading();
+            });
+        });
+        
+        // Social login handlers (placeholder)
+        document.querySelectorAll('.btn-social').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const provider = this.textContent.trim().split(' ')[2].toLowerCase();
+                window.SkillSwap.showNotification(`${provider} login coming soon!`, 'info');
+            });
+        });
+        
+        // Auto-focus first input
+        document.getElementById('email').focus();
+        
+        // Remember me functionality (if needed)
+        const rememberedEmail = localStorage.getItem('skillswap-remembered-email');
+        if (rememberedEmail) {
+            document.getElementById('email').value = rememberedEmail;
+            document.getElementById('password').focus();
+        }
+        
+        // Save email on successful login (you can add this logic)
+        loginForm.addEventListener('submit', function() {
+            const email = document.getElementById('email').value;
+            if (email) {
+                localStorage.setItem('skillswap-remembered-email', email);
+            }
+        });
+    });
+    
+    // Add smooth entrance animation
+    window.addEventListener('load', function() {
+        const authCard = document.querySelector('.auth-card');
+        authCard.style.transform = 'translateY(30px)';
+        authCard.style.opacity = '0';
+        
+        setTimeout(() => {
+            authCard.style.transition = 'all 0.6s ease';
+            authCard.style.transform = 'translateY(0)';
+            authCard.style.opacity = '1';
+        }, 100);
+    });
+</script>
 {% endblock %}
