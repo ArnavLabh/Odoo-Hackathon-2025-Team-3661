@@ -13,16 +13,30 @@ def init_oauth(app):
     """Initialize OAuth with the Flask app"""
     oauth.init_app(app)
     
-    # Register Google OAuth
-    oauth.register(
-        name='google',
-        client_id=app.config['GOOGLE_CLIENT_ID'],
-        client_secret=app.config['GOOGLE_CLIENT_SECRET'],
-        server_metadata_url=app.config['GOOGLE_DISCOVERY_URL'],
-        client_kwargs={
-            'scope': 'openid email profile'
-        }
-    )
+    # Only register Google OAuth if credentials are configured
+    client_id = app.config.get('GOOGLE_CLIENT_ID')
+    client_secret = app.config.get('GOOGLE_CLIENT_SECRET')
+    
+    if client_id and client_secret:
+        try:
+            # Use manual configuration instead of discovery URL to avoid network issues
+            oauth.register(
+                name='google',
+                client_id=client_id,
+                client_secret=client_secret,
+                # Manual configuration instead of discovery URL
+                authorize_url='https://accounts.google.com/o/oauth2/auth',
+                access_token_url='https://oauth2.googleapis.com/token',
+                userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',
+                client_kwargs={
+                    'scope': 'openid email profile'
+                }
+            )
+            app.logger.info("Google OAuth configured successfully")
+        except Exception as e:
+            app.logger.error(f"Failed to configure Google OAuth: {e}")
+    else:
+        app.logger.info("Google OAuth not configured - missing credentials")
 
 # Helper functions
 def get_current_user():
@@ -33,20 +47,38 @@ def get_current_user():
 @auth.route('/login/google')
 def google_login():
     """Initiate Google OAuth login"""
-    if not current_app.config.get('GOOGLE_CLIENT_ID'):
-        flash('Google OAuth is not configured. Please contact administrator.', 'error')
+    # Check if Google OAuth is configured
+    if not current_app.config.get('GOOGLE_CLIENT_ID') or not current_app.config.get('GOOGLE_CLIENT_SECRET'):
+        flash('Google OAuth is not configured. Please use regular login or contact administrator.', 'error')
         return redirect(url_for('main.login'))
     
-    # Create redirect URI
-    redirect_uri = url_for('auth.google_authorized', _external=True)
+    # Check if OAuth client is registered
+    try:
+        google_client = oauth.google
+    except AttributeError:
+        flash('Google OAuth service is not available. Please use regular login.', 'error')
+        return redirect(url_for('main.login'))
     
-    # Redirect to Google OAuth
-    return oauth.google.authorize_redirect(redirect_uri)
+    try:
+        # Create redirect URI
+        redirect_uri = url_for('auth.google_authorized', _external=True)
+        
+        # Redirect to Google OAuth
+        return google_client.authorize_redirect(redirect_uri)
+    except Exception as e:
+        current_app.logger.error(f"Google OAuth error: {e}")
+        flash('Unable to connect to Google. Please try regular login.', 'error')
+        return redirect(url_for('main.login'))
 
 @auth.route('/login/google/authorized')
 def google_authorized():
     """Handle Google OAuth callback"""
     try:
+        # Check if OAuth is available
+        if not hasattr(oauth, 'google'):
+            flash('Google OAuth is not configured.', 'error')
+            return redirect(url_for('main.login'))
+            
         # Get the authorization token
         token = oauth.google.authorize_access_token()
         

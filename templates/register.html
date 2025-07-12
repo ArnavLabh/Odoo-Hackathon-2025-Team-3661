@@ -370,17 +370,18 @@
             
             <div class="auth-body">
                 <!-- Social Registration Options -->
+                {% if config.GOOGLE_CLIENT_ID %}
                 <div class="social-login">
-                    <a href="{{ url_for('google_auth.google_login') }}" class="btn-social">
+                    <a href="{{ url_for('auth.google_login') }}" class="btn-social">
                         <i class="fab fa-google google"></i>
                         Continue with Google
                     </a>
-                    
                 </div>
                 
                 <div class="auth-divider">
                     <span data-translate="or">or</span>
                 </div>
+                {% endif %}
                 
                 <!-- Registration Form -->
                 <form method="POST" id="registerForm" novalidate>
