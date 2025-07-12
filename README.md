@@ -11,13 +11,11 @@
 
 </div>
 
-## 🚀 Live Demo
-> **[View Live App](https://skill-swap-five-mu.vercel.app/)**
 
 ## 🎬 Demo Video
 > Watch our platform in action - from user registration to successful skill swaps.
 
-[Demo Video](https://drive.google.com/drive/folders/19emvsqg24OwLaxZGwz6y8gZ4aFIlcxAJ?usp=sharing))
+[Demo Video](https://drive.google.com/drive/folders/19emvsqg24OwLaxZGwz6y8gZ4aFIlcxAJ?usp=sharing)
 
 *Click above to view the complete demonstration once available*
 
