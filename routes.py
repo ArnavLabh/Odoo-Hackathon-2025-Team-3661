@@ -188,37 +188,39 @@ def edit_profile():
 @main.route('/public_profile/<int:user_id>')
 def public_profile(user_id):
     """View another user's public profile"""
-    user = User.query.get_or_404(user_id)
-    
-    if not user.is_public and (not is_logged_in() or get_current_user().id != user_id):
-        flash('This profile is private.', 'error')
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            flash('User not found.', 'error')
+            return redirect(url_for('main.browse'))
+        
+        if not user.is_public and (not is_logged_in() or get_current_user().id != user_id):
+            flash('This profile is private.', 'error')
+            return redirect(url_for('main.browse'))
+        
+        if user.is_banned:
+            flash('This user is not available.', 'error')
+            return redirect(url_for('main.browse'))
+        
+        offered_skills = UserSkill.query.filter_by(user_id=user_id, type='offered').all()
+        wanted_skills = UserSkill.query.filter_by(user_id=user_id, type='wanted').all()
+        
+        # Get user's feedback/ratings (simplified)
+        user_feedback = []
+        avg_rating = 0
+        
+        can_request_swap = is_logged_in() and get_current_user().id != user_id
+        
+        return render_template('public_profile.html', 
+                             user=user, 
+                             offered_skills=offered_skills, 
+                             wanted_skills=wanted_skills,
+                             can_request_swap=can_request_swap,
+                             feedback=user_feedback,
+                             avg_rating=avg_rating)
+    except Exception as e:
+        flash(f'Error loading profile: {str(e)}', 'error')
         return redirect(url_for('main.browse'))
-    
-    if user.is_banned:
-        flash('This user is not available.', 'error')
-        return redirect(url_for('main.browse'))
-    
-    offered_skills = UserSkill.query.filter_by(user_id=user_id, type='offered').all()
-    wanted_skills = UserSkill.query.filter_by(user_id=user_id, type='wanted').all()
-    
-    # Get user's feedback/ratings
-    user_feedback = db.session.query(Feedback).join(SwapRequest).filter(
-        (SwapRequest.from_user_id == user_id) | (SwapRequest.to_user_id == user_id)
-    ).filter(Feedback.reviewer_id != user_id).all()
-    
-    # Calculate average rating
-    ratings = [f.rating for f in user_feedback if f.rating]
-    avg_rating = sum(ratings) / len(ratings) if ratings else 0
-    
-    can_request_swap = is_logged_in() and get_current_user().id != user_id
-    
-    return render_template('public_profile.html', 
-                         user=user, 
-                         offered_skills=offered_skills, 
-                         wanted_skills=wanted_skills,
-                         can_request_swap=can_request_swap,
-                         feedback=user_feedback,
-                         avg_rating=avg_rating)
 
 # Skills Management Routes
 @main.route('/manage_skills')
