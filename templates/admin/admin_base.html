@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard - Skill Swap{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Admin specific styles -->
+    <style>
+        .admin-sidebar {
+            background: linear-gradient(145deg, #2c3e50, #3498db);
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .admin-content {
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-content.expanded {
+            margin-left: 70px;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sidebar-brand:hover {
+            color: white;
+        }
+        
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+        
+        .nav-item {
+            margin: 0.25rem 1rem;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+        }
+        
+        .admin-header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        
+        .stat-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border: none;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-primary { background: linear-gradient(45deg, #3498db, #2980b9); }
+        .stat-success { background: linear-gradient(45deg, #27ae60, #229954); }
+        .stat-warning { background: linear-gradient(45deg, #f39c12, #e67e22); }
+        .stat-danger { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        .stat-info { background: linear-gradient(45deg, #17a2b8, #138496); }
+        
+        .data-table {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .data-table .table th {
+            background: #f8f9fa;
+            border: none;
+            font-weight: 600;
+            color: #495057;
+            padding: 1rem;
+        }
+        
+        .data-table .table td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        .action-btn {
+            padding: 0.25rem 0.75rem;
+            margin: 0.125rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .status-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active { background: #d4edda; color: #155724; }
+        .status-banned { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-completed { background: #d1ecf1; color: #0c5460; }
+        
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            color: #495057;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+            .admin-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+    
+    {% block additional_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="admin-sidebar" id="adminSidebar">
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-brand">
+            <i class="fas fa-shield-alt me-2"></i>
+            <span class="brand-text">Admin Panel</span>
+        </a>
+        
+        <ul class="sidebar-nav list-unstyled">
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'admin.admin_dashboard' %}active{% endif %}" 
+                   href="{{ url_for('admin.admin_dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'admin.user_list' %}active{% endif %}" 
+                   href="{{ url_for('admin.user_list') }}">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-text">User Management</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'admin.swap_moderation' %}active{% endif %}" 
+                   href="{{ url_for('admin.swap_moderation') }}">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span class="nav-text">Swap Moderation</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'admin.skill_moderation' %}active{% endif %}" 
+                   href="{{ url_for('admin.skill_moderation') }}">
+                    <i class="fas fa-cogs"></i>
+                    <span class="nav-text">Skill Management</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'admin.skill_descriptions' %}active{% endif %}" 
+                   href="{{ url_for('admin.skill_descriptions') }}">
+                    <i class="fas fa-file-alt"></i>
+                    <span class="nav-text">Skill Descriptions</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'admin.notifications' %}active{% endif %}" 
+                   href="{{ url_for('admin.notifications') }}">
+                    <i class="fas fa-bell"></i>
+                    <span class="nav-text">Notifications</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <hr style="border-color: rgba(255,255,255,0.2); margin: 1rem;">
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.download_user_report') }}">
+                    <i class="fas fa-download"></i>
+                    <span class="nav-text">User Report</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.download_swap_report') }}">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="nav-text">Swap Report</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin.download_feedback_report') }}">
+                    <i class="fas fa-comments"></i>
+                    <span class="nav-text">Feedback Report</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <hr style="border-color: rgba(255,255,255,0.2); margin: 1rem;">
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.index') }}">
+                    <i class="fas fa-home"></i>
+                    <span class="nav-text">Back to Site</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('main.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="nav-text">Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="admin-content" id="adminContent">
+        <!-- Header -->
+        <header class="admin-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <button class="toggle-sidebar me-3" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h4 class="mb-0">{% block page_title %}Admin Dashboard{% endblock %}</h4>
+            </div>
+            
+            <div class="d-flex align-items-center">
+                <span class="me-3">Welcome, Admin</span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>
+                        Actions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('main.profile') }}">
+                            <i class="fas fa-user me-2"></i>Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.index') }}">
+                            <i class="fas fa-home me-2"></i>View Site
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container-fluid mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Page Content -->
+        <div class="container-fluid p-4">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const content = document.getElementById('adminContent');
+            
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
+        }
+        
+        // Mobile sidebar toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            sidebar.classList.toggle('show');
+        }
+        
+        // Auto-refresh for real-time data
+        function autoRefresh() {
+            if (window.location.pathname.includes('/admin/admin_dashboard')) {
+                setTimeout(() => {
+                    location.reload();
+                }, 300000); // Refresh every 5 minutes
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            autoRefresh();
+        });
+    </script>
+    
+    {% block additional_js %}{% endblock %}
+</body>
+</html>

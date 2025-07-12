@@ -84,8 +84,10 @@ def request_swap(to_user_id):
     current_user_offered = UserSkill.query.filter_by(user_id=current_user.id, type='offered').all()
     to_user_offered = UserSkill.query.filter_by(user_id=to_user_id, type='offered').all()
     
-    return render_template('request_swap.html', 
-                         to_user=to_user, 
+    return render_template('swap_request.html', 
+                         user=to_user,
+                         to_user=to_user,
+                         current_user=current_user, 
                          current_user_offered=current_user_offered,
                          to_user_offered=to_user_offered)
 
@@ -240,6 +242,7 @@ def leave_feedback(request_id):
     
     return render_template('feedback.html', 
                          swap_request=swap_request, 
+                         current_user=current_user,
                          other_user=other_user,
                          existing_feedback=existing_feedback)
 

@@ -131,7 +131,12 @@ def login():
                 # Login the user
                 tokens = login_user(user)
                 flash(f'Welcome back, {user.name}!', 'success')
-                return redirect(url_for('main.dashboard'))
+                
+                # Redirect admins to admin dashboard
+                if user.is_admin:
+                    return redirect(url_for('admin.admin_dashboard'))
+                else:
+                    return redirect(url_for('main.dashboard'))
             else:
                 flash('Invalid email or password.', 'error')
         else:
@@ -210,9 +215,11 @@ def public_profile(user_id):
         avg_rating = 0
         
         can_request_swap = is_logged_in() and get_current_user().id != user_id
+        current_user = get_current_user() if is_logged_in() else None
         
         return render_template('public_profile.html', 
                              user=user, 
+                             current_user=current_user,
                              offered_skills=offered_skills, 
                              wanted_skills=wanted_skills,
                              can_request_swap=can_request_swap,
@@ -231,10 +238,17 @@ def manage_skills():
     
     user = get_current_user()
     all_skills = Skill.query.all()
-    user_offered = [us.skill_id for us in UserSkill.query.filter_by(user_id=user.id, type='offered').all()]
-    user_wanted = [us.skill_id for us in UserSkill.query.filter_by(user_id=user.id, type='wanted').all()]
+    offered_skills = UserSkill.query.filter_by(user_id=user.id, type='offered').all()
+    wanted_skills = UserSkill.query.filter_by(user_id=user.id, type='wanted').all()
+    user_offered = [us.skill_id for us in offered_skills]
+    user_wanted = [us.skill_id for us in wanted_skills]
     
-    return render_template('manage_skills.html', skills=all_skills, user_offered=user_offered, user_wanted=user_wanted)
+    return render_template('manage_skills.html', 
+                         skills=all_skills, 
+                         offered_skills=offered_skills,
+                         wanted_skills=wanted_skills,
+                         user_offered=user_offered, 
+                         user_wanted=user_wanted)
 
 @main.route('/add_skill', methods=['POST'])
 def add_skill():
@@ -243,6 +257,9 @@ def add_skill():
     
     skill_name = request.form.get('skill_name')
     skill_type = request.form.get('skill_type')  # 'offered' or 'wanted'
+    
+    if not skill_name or not skill_type:
+        return jsonify({'error': 'Missing skill name or type'}), 400
     
     # Create skill if it doesn't exist
     skill = Skill.query.filter_by(name=skill_name).first()
@@ -267,10 +284,10 @@ def add_skill():
         db.session.add(user_skill)
         db.session.commit()
         flash(f'Skill "{skill_name}" added to your {skill_type} skills!', 'success')
+        return jsonify({'success': True, 'message': f'Skill "{skill_name}" added successfully!'})
     else:
         flash(f'Skill "{skill_name}" is already in your {skill_type} skills.', 'info')
-    
-    return redirect(url_for('main.manage_skills'))
+        return jsonify({'error': f'Skill "{skill_name}" is already in your {skill_type} skills.'}), 400
 
 @main.route('/remove_skill/<int:skill_id>/<skill_type>')
 def remove_skill(skill_id, skill_type):
@@ -300,7 +317,11 @@ def swap_request_form(to_user_id):
         return redirect(url_for('main.login'))
     
     current_user = get_current_user()
-    to_user = User.query.get_or_404(to_user_id)
+    to_user = User.query.get(to_user_id)
+    
+    if not to_user:
+        flash('User not found.', 'error')
+        return redirect(url_for('main.browse'))
     
     if current_user.id == to_user_id:
         flash('You cannot request a swap with yourself.', 'error')
@@ -309,11 +330,15 @@ def swap_request_form(to_user_id):
     # Get current user's offered skills and target user's offered skills
     current_user_offered = UserSkill.query.filter_by(user_id=current_user.id, type='offered').all()
     to_user_offered = UserSkill.query.filter_by(user_id=to_user_id, type='offered').all()
+    to_user_wanted = UserSkill.query.filter_by(user_id=to_user_id, type='wanted').all()
     
     return render_template('swap_request.html', 
-                         to_user=to_user, 
+                         user=to_user,
+                         to_user=to_user,
+                         current_user=current_user,
                          current_user_offered=current_user_offered,
-                         to_user_offered=to_user_offered)
+                         to_user_offered=to_user_offered,
+                         to_user_wanted=to_user_wanted)
 
 @main.route('/swap_list')
 def swap_list():
