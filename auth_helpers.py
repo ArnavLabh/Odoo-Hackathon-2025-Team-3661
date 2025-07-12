@@ -16,9 +16,14 @@ def hash_password(password):
 
 def check_password(password, hashed_password):
     """Check if password matches the hashed password"""
-    password_bytes = password.encode('utf-8')
-    hashed_bytes = hashed_password.encode('utf-8')
-    return bcrypt.checkpw(password_bytes, hashed_bytes)
+    try:
+        password_bytes = password.encode('utf-8')
+        hashed_bytes = hashed_password.encode('utf-8')
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
+    except Exception as e:
+        print(f"Password check error: {e}")
+        print(f"Hash format: {hashed_password[:20]}...")
+        return False
 
 def create_user_tokens(user):
     """Create JWT tokens for a user"""

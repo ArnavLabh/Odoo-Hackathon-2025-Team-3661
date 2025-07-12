@@ -91,12 +91,24 @@ def create_app():
                     admin_email = "admin@skillswap.com"
                     admin_user = User.query.filter_by(email=admin_email).first()
                     if not admin_user:
-                        import hashlib
+                        from auth_helpers import hash_password
                         admin_password = "admin123"
-                        admin_hash = hashlib.sha256(admin_password.encode('utf-8')).hexdigest()
-                        admin_user = User(name="Admin", email=admin_email, password_hash=admin_hash, is_admin=True)
-                        db.session.add(admin_user)
-                        db.session.commit()
+                        try:
+                            admin_hash = hash_password(admin_password)
+                            admin_user = User(name="Admin", email=admin_email, password_hash=admin_hash, is_admin=True, is_public=False)
+                            db.session.add(admin_user)
+                            db.session.commit()
+                            print(f"✅ Admin user created: {admin_email} / {admin_password}")
+                        except Exception as e:
+                            print(f"❌ Error creating admin user: {e}")
+                    else:
+                        # Check if admin user has proper bcrypt hash
+                        if admin_user.password_hash and not admin_user.password_hash.startswith('$2b$'):
+                            from auth_helpers import hash_password
+                            admin_password = "admin123"
+                            admin_user.password_hash = hash_password(admin_password)
+                            db.session.commit()
+                            print(f"🔧 Admin password hash updated to bcrypt format")
 
                     demo_users = [
                         {"name": "Alice Smith", "email": "alice@example.com", "skills": ["Python", "Flask", "Public Speaking"]},
