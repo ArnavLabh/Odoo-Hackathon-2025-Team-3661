@@ -568,7 +568,7 @@ def forgot_password():
         
         return redirect(url_for('main.login'))
     
-    return render_template('forgot_password.html')
+    return render_template('forgotpassword.html')
 
 @main.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -611,7 +611,7 @@ def send_reset_email(email, token):
     
     # TODO: Implement actual email sending
     # Example with SMTP (requires email server configuration):
-    """
+    
     msg = MIMEMultipart()
     msg['From'] = 'noreply@skillswap.com'
     msg['To'] = email
@@ -641,7 +641,7 @@ def send_reset_email(email, token):
     # server.login('your-email@gmail.com', 'your-app-password')
     # server.send_message(msg)
     # server.quit()
-    """
+    
 
 # Error handlers
 @main.errorhandler(404)
