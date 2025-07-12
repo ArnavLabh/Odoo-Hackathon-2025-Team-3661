@@ -393,14 +393,33 @@
                     
                     <div class="skills-section">
                         <h3 class="skills-title">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            Skills You Can Offer
+                        </h3>
+                        
+                        <div class="skills-grid">
+                            {% for skill in current_user_offered %}
+                            <div class="skill-card" data-skill-id="{{ skill.skill.id }}" data-skill-name="{{ skill.skill.name }}" data-skill-type="offered">
+                                <h4>{{ skill.skill.name }}</h4>
+                                <span class="skill-type skill-offered">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Your Skill
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="skills-section">
+                        <h3 class="skills-title">
                             <i class="fas fa-lightbulb"></i>
                             Skills {{ user.name }} Can Teach You
                         </h3>
                         
                         <div class="skills-grid">
-                            {% for skill in user.get_offered_skills() %}
-                            <div class="skill-card" data-skill-id="{{ skill.id }}" data-skill-name="{{ skill.name }}" data-skill-type="wanted">
-                                <h4>{{ skill.name }}</h4>
+                            {% for skill in to_user_offered %}
+                            <div class="skill-card" data-skill-id="{{ skill.skill.id }}" data-skill-name="{{ skill.skill.name }}" data-skill-type="wanted">
+                                <h4>{{ skill.skill.name }}</h4>
                                 <span class="skill-type skill-offered">
                                     <i class="fas fa-check-circle me-1"></i>
                                     Offering
@@ -417,9 +436,9 @@
                         </h3>
                         
                         <div class="skills-grid">
-                            {% for skill in user.get_wanted_skills() %}
-                            <div class="skill-card" data-skill-id="{{ skill.id }}" data-skill-name="{{ skill.name }}" data-skill-type="offered">
-                                <h4>{{ skill.name }}</h4>
+                            {% for skill in to_user_wanted %}
+                            <div class="skill-card" data-skill-id="{{ skill.skill.id }}" data-skill-name="{{ skill.skill.name }}" data-skill-type="offered">
+                                <h4>{{ skill.skill.name }}</h4>
                                 <span class="skill-type skill-wanted">
                                     <i class="fas fa-graduation-cap me-1"></i>
                                     Learning
@@ -475,7 +494,7 @@
                         </div>
                     </div>
                     
-                    <form action="{{ url_for('main.create_swap_request', user_id=user.id) }}" method="post" class="swap-form" id="swap-form">
+                    <form action="{{ url_for('swaps.request_swap', to_user_id=user.id) }}" method="post" class="swap-form" id="swap-form">
                         <input type="hidden" name="offered_skill_id" id="offered_skill_id">
                         <input type="hidden" name="wanted_skill_id" id="wanted_skill_id">
                         

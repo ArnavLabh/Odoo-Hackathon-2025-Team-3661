@@ -330,13 +330,15 @@ def swap_request_form(to_user_id):
     # Get current user's offered skills and target user's offered skills
     current_user_offered = UserSkill.query.filter_by(user_id=current_user.id, type='offered').all()
     to_user_offered = UserSkill.query.filter_by(user_id=to_user_id, type='offered').all()
+    to_user_wanted = UserSkill.query.filter_by(user_id=to_user_id, type='wanted').all()
     
     return render_template('swap_request.html', 
                          user=to_user,
                          to_user=to_user,
                          current_user=current_user,
                          current_user_offered=current_user_offered,
-                         to_user_offered=to_user_offered)
+                         to_user_offered=to_user_offered,
+                         to_user_wanted=to_user_wanted)
 
 @main.route('/swap_list')
 def swap_list():
